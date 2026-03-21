@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Ambiente (dados sensíveis) ###
+.env
+
+### Uploads ###
+uploads/
+
+### método agêntico ###
+
+metodo_agentico.md
