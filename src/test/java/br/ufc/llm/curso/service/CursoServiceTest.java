@@ -268,6 +268,38 @@ class CursoServiceTest {
         assertThat(resultado).isEmpty();
     }
 
+    @Test
+    @DisplayName("Deve excluir curso com sucesso (US-P15)")
+    void deveExcluirCursoComSucesso() {
+        var professor = professor();
+        var curso = cursoDosProfessor(professor);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+
+        cursoService.excluir(1L, "prof@email.com");
+
+        verify(cursoRepository).delete(curso);
+    }
+
+    @Test
+    @DisplayName("Deve lançar CursoNaoEncontradoException ao excluir curso inexistente")
+    void deveLancarExcecaoAoExcluirCursoInexistente() {
+        when(cursoRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cursoService.excluir(99L, "prof@email.com"))
+                .isInstanceOf(CursoNaoEncontradoException.class);
+    }
+
+    @Test
+    @DisplayName("Deve lançar CursoNaoEncontradoException ao excluir curso de outro professor")
+    void deveLancarExcecaoAoExcluirCursoDeOutroProfessor() {
+        var outroProfessor = Usuario.builder().id(2L).email("outro@email.com").build();
+        var curso = cursoDosProfessor(outroProfessor);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+
+        assertThatThrownBy(() -> cursoService.excluir(1L, "prof@email.com"))
+                .isInstanceOf(CursoNaoEncontradoException.class);
+    }
+
     private Curso cursoCom(Usuario professor, StatusCurso status) {
         return Curso.builder()
                 .id(1L)

@@ -29,6 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -244,6 +245,27 @@ class CursoControllerTest {
                         .content(objectMapper.writeValueAsString(java.util.Map.of(
                                 "requerEndereco", true, "requerGenero", false, "requerIdade", false
                         ))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 204 ao excluir curso com sucesso (US-P15)")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar204AoExcluirCurso() throws Exception {
+        doNothing().when(cursoService).excluir(any(), any());
+
+        mockMvc.perform(delete("/cursos/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao excluir curso inexistente ou de outro professor")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar404AoExcluirCursoInexistente() throws Exception {
+        doThrow(new CursoNaoEncontradoException(99L)).when(cursoService).excluir(any(), any());
+
+        mockMvc.perform(delete("/cursos/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }

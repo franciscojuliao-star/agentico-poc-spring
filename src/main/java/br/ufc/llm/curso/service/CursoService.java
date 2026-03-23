@@ -95,6 +95,17 @@ public class CursoService {
                 .stream().map(this::toResponse).toList();
     }
 
+    public void excluir(Long cursoId, String emailProfessor) {
+        var curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new CursoNaoEncontradoException(cursoId));
+
+        if (!curso.getProfessor().getEmail().equals(emailProfessor)) {
+            throw new CursoNaoEncontradoException(cursoId);
+        }
+
+        cursoRepository.delete(curso);
+    }
+
     public void alterarStatus(Long cursoId, AlterarStatusRequest request, String emailProfessor) {
         var curso = cursoRepository.findById(cursoId)
                 .orElseThrow(() -> new CursoNaoEncontradoException(cursoId));

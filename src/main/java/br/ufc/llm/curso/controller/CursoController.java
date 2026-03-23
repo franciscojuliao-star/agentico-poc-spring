@@ -52,6 +52,14 @@ public class CursoController {
         return ResponseEntity.ok(ApiResponse.ok(cursoService.buscar(q, userDetails.getUsername()), "Busca realizada com sucesso."));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        cursoService.excluir(id, userDetails.getUsername());
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<Void>> alterarStatus(
             @PathVariable Long id,
