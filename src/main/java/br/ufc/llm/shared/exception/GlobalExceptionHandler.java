@@ -1,5 +1,7 @@
 package br.ufc.llm.shared.exception;
 
+import br.ufc.llm.auth.exception.ContaInativaException;
+import br.ufc.llm.auth.exception.CredenciaisInvalidasException;
 import br.ufc.llm.shared.dto.ApiResponse;
 import br.ufc.llm.usuario.exception.CpfJaCadastradoException;
 import br.ufc.llm.usuario.exception.EmailJaCadastradoException;
@@ -37,5 +39,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(ex.getMessage(), 409));
+    }
+
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCredenciaisInvalidas(CredenciaisInvalidasException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(ex.getMessage(), 401));
+    }
+
+    @ExceptionHandler(ContaInativaException.class)
+    public ResponseEntity<ApiResponse<Void>> handleContaInativa(ContaInativaException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage(), 403));
     }
 }
