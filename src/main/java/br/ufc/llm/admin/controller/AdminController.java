@@ -5,9 +5,10 @@ import br.ufc.llm.shared.dto.ApiResponse;
 import br.ufc.llm.usuario.dto.UsuarioResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 
 import java.util.List;
 
@@ -21,5 +22,11 @@ public class AdminController {
     @GetMapping("/usuarios")
     public ResponseEntity<ApiResponse<List<UsuarioResponse>>> listarUsuarios() {
         return ResponseEntity.ok(ApiResponse.ok(adminService.listarUsuarios(), "Usuários listados com sucesso."));
+    }
+
+    @PatchMapping("/usuarios/{id}/ativar")
+    public ResponseEntity<ApiResponse<Void>> ativar(@PathVariable Long id) {
+        adminService.ativar(id);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Conta ativada com sucesso."));
     }
 }

@@ -5,6 +5,7 @@ import br.ufc.llm.shared.security.JwtAuthFilter;
 import br.ufc.llm.usuario.domain.PerfilUsuario;
 import br.ufc.llm.usuario.domain.StatusUsuario;
 import br.ufc.llm.usuario.dto.UsuarioResponse;
+import br.ufc.llm.usuario.exception.UsuarioNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +17,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -59,5 +63,25 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 200 ao ativar conta com sucesso")
+    void deveRetornar200AoAtivarConta() throws Exception {
+        doNothing().when(adminService).ativar(1L);
+
+        mockMvc.perform(patch("/admin/usuarios/1/ativar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao ativar conta com id inexistente")
+    void deveRetornar404AoAtivarContaInexistente() throws Exception {
+        doThrow(new UsuarioNaoEncontradoException(99L)).when(adminService).ativar(99L);
+
+        mockMvc.perform(patch("/admin/usuarios/99/ativar"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
     }
 }
