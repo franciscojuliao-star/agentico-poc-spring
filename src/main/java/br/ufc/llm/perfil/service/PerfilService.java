@@ -1,6 +1,9 @@
 package br.ufc.llm.perfil.service;
 
+import br.ufc.llm.perfil.dto.PerfilResponse;
 import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
+import br.ufc.llm.usuario.domain.Usuario;
+import br.ufc.llm.usuario.exception.UsuarioNaoEncontradoException;
 import br.ufc.llm.usuario.repository.UsuarioRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
@@ -29,6 +32,12 @@ public class PerfilService {
                          @Value("${upload.directory}") String uploadDir) {
         this.usuarioRepository = usuarioRepository;
         this.uploadDir = uploadDir;
+    }
+
+    public PerfilResponse buscarPerfil(String email) {
+        var usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsuarioNaoEncontradoException(0L));
+        return toResponse(usuario);
     }
 
     public void atualizarFoto(MultipartFile arquivo, String email) {
@@ -72,6 +81,24 @@ public class PerfilService {
         } catch (IOException e) {
             log.warn("Não foi possível excluir foto anterior: {}", fotoPerfil);
         }
+    }
+
+    private PerfilResponse toResponse(Usuario usuario) {
+        return new PerfilResponse(
+                usuario.getId(),
+                usuario.getNome(),
+                mascararCpf(usuario.getCpf()),
+                usuario.getEmail(),
+                usuario.getPerfil(),
+                usuario.getStatus(),
+                usuario.getFotoPerfil(),
+                usuario.getCriadoEm()
+        );
+    }
+
+    private String mascararCpf(String cpf) {
+        if (cpf == null || cpf.length() < 2) return cpf;
+        return "***.***.***-" + cpf.substring(cpf.length() - 2);
     }
 
     private String extrairExtensao(String nomeOriginal) {

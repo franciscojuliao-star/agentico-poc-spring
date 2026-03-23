@@ -1,5 +1,6 @@
 package br.ufc.llm.perfil.controller;
 
+import br.ufc.llm.perfil.dto.PerfilResponse;
 import br.ufc.llm.perfil.service.PerfilService;
 import br.ufc.llm.shared.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,6 +19,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class PerfilController {
 
     private final PerfilService perfilService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<PerfilResponse>> buscarPerfil(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(perfilService.buscarPerfil(userDetails.getUsername()), "Perfil carregado com sucesso."));
+    }
 
     @PatchMapping(value = "/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Void>> atualizarFoto(

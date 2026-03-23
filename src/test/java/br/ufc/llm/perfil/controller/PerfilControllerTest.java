@@ -1,7 +1,10 @@
 package br.ufc.llm.perfil.controller;
 
+import br.ufc.llm.perfil.dto.PerfilResponse;
 import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
 import br.ufc.llm.perfil.service.PerfilService;
+import br.ufc.llm.usuario.domain.PerfilUsuario;
+import br.ufc.llm.usuario.domain.StatusUsuario;
 import br.ufc.llm.shared.security.JwtAuthFilter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,11 +16,15 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import org.springframework.http.HttpMethod;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -68,5 +75,22 @@ class PerfilControllerTest {
         mockMvc.perform(multipart(HttpMethod.PATCH, "/perfil/foto").file(arquivoVazio))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 200 com dados do perfil e CPF mascarado")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200ComDadosDoPerfil() throws Exception {
+        when(perfilService.buscarPerfil("prof@email.com")).thenReturn(new PerfilResponse(
+                1L, "Professor Silva", "***.***.***-01", "prof@email.com",
+                PerfilUsuario.PROFESSOR, StatusUsuario.ATIVO, null, LocalDateTime.now()
+        ));
+
+        mockMvc.perform(get("/perfil"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.nome").value("Professor Silva"))
+                .andExpect(jsonPath("$.data.cpf").value("***.***.***-01"))
+                .andExpect(jsonPath("$.data.email").value("prof@email.com"));
     }
 }

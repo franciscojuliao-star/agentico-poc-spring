@@ -1,5 +1,6 @@
 package br.ufc.llm.perfil.service;
 
+import br.ufc.llm.perfil.dto.PerfilResponse;
 import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
 import br.ufc.llm.usuario.domain.PerfilUsuario;
 import br.ufc.llm.usuario.domain.StatusUsuario;
@@ -61,11 +62,26 @@ class PerfilServiceTest {
                 .isInstanceOf(TipoArquivoInvalidoException.class);
     }
 
+    @Test
+    @DisplayName("Deve retornar dados do perfil com CPF mascarado")
+    void deveRetornarPerfilComCpfMascarado() {
+        var usuario = usuario();
+        when(usuarioRepository.findByEmail("prof@email.com")).thenReturn(Optional.of(usuario));
+
+        PerfilResponse perfil = perfilService.buscarPerfil("prof@email.com");
+
+        assertThat(perfil.nome()).isEqualTo("Professor Silva");
+        assertThat(perfil.email()).isEqualTo("prof@email.com");
+        assertThat(perfil.cpf()).isEqualTo("***.***.***-01");
+        assertThat(perfil.cpf()).doesNotContain("123");
+    }
+
     private Usuario usuario() {
         return Usuario.builder()
                 .id(1L)
                 .email("prof@email.com")
                 .nome("Professor Silva")
+                .cpf("123.456.789-01")
                 .senha("hash")
                 .perfil(PerfilUsuario.PROFESSOR)
                 .status(StatusUsuario.ATIVO)
