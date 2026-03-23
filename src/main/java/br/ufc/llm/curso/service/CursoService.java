@@ -67,6 +67,11 @@ public class CursoService {
         return new ListaCursosResponse(ativos, arquivados);
     }
 
+    public List<CursoResponse> buscar(String termo, String emailProfessor) {
+        return cursoRepository.buscarPorTexto(termo, emailProfessor)
+                .stream().map(this::toResponse).toList();
+    }
+
     public void configurarMatricula(Long cursoId, ConfigurarMatriculaRequest request, String emailProfessor) {
         var curso = cursoRepository.findById(cursoId)
                 .orElseThrow(() -> new CursoNaoEncontradoException(cursoId));

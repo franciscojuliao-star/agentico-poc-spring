@@ -126,6 +126,29 @@ class CursoControllerTest {
     }
 
     @Test
+    @DisplayName("Deve retornar 200 com cursos encontrados na busca por texto")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200NaBuscaPorTexto() throws Exception {
+        var curso = new CursoResponse(1L, "Curso de Java", "tecnologia", "Descrição", "40h", null, StatusCurso.PUBLICADO, 1L, LocalDateTime.now());
+        when(cursoService.buscar(any(), any())).thenReturn(List.of(curso));
+
+        mockMvc.perform(get("/cursos/buscar").param("q", "java"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].titulo").value("Curso de Java"));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 400 quando parâmetro q está em branco")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar400QuandoTermoEmBranco() throws Exception {
+        mockMvc.perform(get("/cursos/buscar").param("q", ""))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("Deve retornar 200 ao configurar dados de matrícula")
     @WithMockUser(username = "prof@email.com")
     void deveRetornar200AoConfigurarDadosDeMatricula() throws Exception {

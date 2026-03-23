@@ -9,6 +9,7 @@ import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.usuario.exception.CpfJaCadastradoException;
 import br.ufc.llm.usuario.exception.EmailJaCadastradoException;
 import br.ufc.llm.usuario.exception.UsuarioNaoEncontradoException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,6 +20,16 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(ConstraintViolationException ex) {
+        String mensagem = ex.getConstraintViolations().stream()
+                .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
+                .collect(java.util.stream.Collectors.joining("; "));
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(mensagem, 400));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidacao(MethodArgumentNotValidException ex) {

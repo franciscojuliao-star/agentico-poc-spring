@@ -160,6 +160,29 @@ class CursoServiceTest {
         assertThat(resultado.arquivados()).hasSize(1);
     }
 
+    @Test
+    @DisplayName("Deve retornar cursos cujo título, descrição ou categoria contenham o termo")
+    void deveBuscarCursosPorTexto() {
+        var professor = professor();
+        var curso = cursoCom(professor, StatusCurso.PUBLICADO);
+        when(cursoRepository.buscarPorTexto("java", "prof@email.com")).thenReturn(List.of(curso));
+
+        var resultado = cursoService.buscar("java", "prof@email.com");
+
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).titulo()).isEqualTo("Curso");
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando nenhum curso corresponde ao termo")
+    void deveRetornarListaVaziaQuandoNenhumCursoCorresponde() {
+        when(cursoRepository.buscarPorTexto("xyz", "prof@email.com")).thenReturn(List.of());
+
+        var resultado = cursoService.buscar("xyz", "prof@email.com");
+
+        assertThat(resultado).isEmpty();
+    }
+
     private Curso cursoCom(Usuario professor, StatusCurso status) {
         return Curso.builder()
                 .id(1L)

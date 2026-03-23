@@ -8,7 +8,9 @@ import br.ufc.llm.curso.service.CursoService;
 import br.ufc.llm.shared.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @SecurityRequirement(name = "bearerAuth")
+@Validated
 @RestController
 @RequestMapping("/cursos")
 @RequiredArgsConstructor
@@ -29,6 +32,13 @@ public class CursoController {
     public ResponseEntity<ApiResponse<ListaCursosResponse>> listar(
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.ok(cursoService.listar(userDetails.getUsername()), "Cursos listados com sucesso."));
+    }
+
+    @GetMapping("/buscar")
+    public ResponseEntity<ApiResponse<java.util.List<CursoResponse>>> buscar(
+            @RequestParam @NotBlank(message = "Termo de busca é obrigatório") String q,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(cursoService.buscar(q, userDetails.getUsername()), "Busca realizada com sucesso."));
     }
 
     @PatchMapping("/{id}/dados-matricula")
