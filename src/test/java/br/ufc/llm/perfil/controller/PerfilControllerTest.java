@@ -1,10 +1,12 @@
 package br.ufc.llm.perfil.controller;
 
 import br.ufc.llm.perfil.dto.PerfilResponse;
+import br.ufc.llm.perfil.exception.SenhaAtualInvalidaException;
 import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
 import br.ufc.llm.perfil.service.PerfilService;
 import br.ufc.llm.usuario.domain.PerfilUsuario;
 import br.ufc.llm.usuario.domain.StatusUsuario;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import br.ufc.llm.shared.security.JwtAuthFilter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +28,7 @@ import org.springframework.http.HttpMethod;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PerfilControllerTest {
 
     @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private PerfilService perfilService;
     @MockitoBean private JwtAuthFilter jwtAuthFilter;
@@ -92,5 +96,50 @@ class PerfilControllerTest {
                 .andExpect(jsonPath("$.data.nome").value("Professor Silva"))
                 .andExpect(jsonPath("$.data.cpf").value("***.***.***-01"))
                 .andExpect(jsonPath("$.data.email").value("prof@email.com"));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 200 ao alterar senha com sucesso")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200AoAlterarSenha() throws Exception {
+        doNothing().when(perfilService).alterarSenha(any(), any(), any());
+
+        mockMvc.perform(patch("/perfil/senha")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                "senhaAtual", "senhaAtual123",
+                                "novaSenha", "novaSenha123"
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 400 quando senha atual está incorreta")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar400QuandoSenhaAtualIncorreta() throws Exception {
+        doThrow(new SenhaAtualInvalidaException()).when(perfilService).alterarSenha(any(), any(), any());
+
+        mockMvc.perform(patch("/perfil/senha")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                "senhaAtual", "errada",
+                                "novaSenha", "novaSenha123"
+                        ))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 400 quando nova senha tem menos de 8 caracteres")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar400QuandoNovaSenhaCurta() throws Exception {
+        mockMvc.perform(patch("/perfil/senha")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                "senhaAtual", "senhaAtual123",
+                                "novaSenha", "curta"
+                        ))))
+                .andExpect(status().isBadRequest());
     }
 }

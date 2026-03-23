@@ -1,6 +1,7 @@
 package br.ufc.llm.perfil.service;
 
 import br.ufc.llm.perfil.dto.PerfilResponse;
+import br.ufc.llm.perfil.exception.SenhaAtualInvalidaException;
 import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
 import br.ufc.llm.usuario.domain.PerfilUsuario;
 import br.ufc.llm.usuario.domain.StatusUsuario;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -29,14 +31,14 @@ class PerfilServiceTest {
     @TempDir
     Path tempDir;
 
-    @Mock
-    private UsuarioRepository usuarioRepository;
+    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private PasswordEncoder passwordEncoder;
 
     private PerfilService perfilService;
 
     @BeforeEach
     void setUp() {
-        perfilService = new PerfilService(usuarioRepository, tempDir.toString());
+        perfilService = new PerfilService(usuarioRepository, passwordEncoder, tempDir.toString());
     }
 
     @Test
@@ -74,6 +76,31 @@ class PerfilServiceTest {
         assertThat(perfil.email()).isEqualTo("prof@email.com");
         assertThat(perfil.cpf()).isEqualTo("***.***.***-01");
         assertThat(perfil.cpf()).doesNotContain("123");
+    }
+
+    @Test
+    @DisplayName("Deve alterar senha quando senha atual está correta")
+    void deveAlterarSenhaComSenhaAtualCorreta() {
+        var usuario = usuario();
+        when(usuarioRepository.findByEmail("prof@email.com")).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches("senhaAtual", "hash")).thenReturn(true);
+        when(passwordEncoder.encode("novaSenha123")).thenReturn("novo-hash");
+
+        perfilService.alterarSenha("prof@email.com", "senhaAtual", "novaSenha123");
+
+        assertThat(usuario.getSenha()).isEqualTo("novo-hash");
+        verify(usuarioRepository).save(usuario);
+    }
+
+    @Test
+    @DisplayName("Deve lançar SenhaAtualInvalidaException quando senha atual está incorreta")
+    void deveLancarExcecaoQuandoSenhaAtualIncorreta() {
+        var usuario = usuario();
+        when(usuarioRepository.findByEmail("prof@email.com")).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches("senhaErrada", "hash")).thenReturn(false);
+
+        assertThatThrownBy(() -> perfilService.alterarSenha("prof@email.com", "senhaErrada", "novaSenha123"))
+                .isInstanceOf(SenhaAtualInvalidaException.class);
     }
 
     private Usuario usuario() {

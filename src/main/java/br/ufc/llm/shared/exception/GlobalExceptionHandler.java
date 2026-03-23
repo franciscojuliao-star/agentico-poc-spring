@@ -1,6 +1,7 @@
 package br.ufc.llm.shared.exception;
 
 import br.ufc.llm.auth.exception.ContaInativaException;
+import br.ufc.llm.perfil.exception.SenhaAtualInvalidaException;
 import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
 import br.ufc.llm.auth.exception.CredenciaisInvalidasException;
 import br.ufc.llm.shared.dto.ApiResponse;
@@ -27,6 +28,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(mensagem, 400));
+    }
+
+    @ExceptionHandler(SenhaAtualInvalidaException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSenhaAtualInvalida(SenhaAtualInvalidaException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage(), 400));
     }
 
     @ExceptionHandler(TipoArquivoInvalidoException.class)

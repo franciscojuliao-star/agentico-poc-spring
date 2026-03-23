@@ -1,6 +1,7 @@
 package br.ufc.llm.perfil.service;
 
 import br.ufc.llm.perfil.dto.PerfilResponse;
+import br.ufc.llm.perfil.exception.SenhaAtualInvalidaException;
 import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
 import br.ufc.llm.usuario.domain.Usuario;
 import br.ufc.llm.usuario.exception.UsuarioNaoEncontradoException;
@@ -8,6 +9,7 @@ import br.ufc.llm.usuario.repository.UsuarioRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,11 +28,14 @@ public class PerfilService {
     );
 
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
     private final String uploadDir;
 
     public PerfilService(UsuarioRepository usuarioRepository,
+                         PasswordEncoder passwordEncoder,
                          @Value("${upload.directory}") String uploadDir) {
         this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
         this.uploadDir = uploadDir;
     }
 
@@ -38,6 +43,18 @@ public class PerfilService {
         var usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsuarioNaoEncontradoException(0L));
         return toResponse(usuario);
+    }
+
+    public void alterarSenha(String email, String senhaAtual, String novaSenha) {
+        var usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsuarioNaoEncontradoException(0L));
+
+        if (!passwordEncoder.matches(senhaAtual, usuario.getSenha())) {
+            throw new SenhaAtualInvalidaException();
+        }
+
+        usuario.setSenha(passwordEncoder.encode(novaSenha));
+        usuarioRepository.save(usuario);
     }
 
     public void atualizarFoto(MultipartFile arquivo, String email) {
