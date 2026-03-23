@@ -8,6 +8,8 @@ import br.ufc.llm.shared.dto.ApiResponse;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.exception.TransicaoStatusInvalidaException;
 import br.ufc.llm.aula.exception.AulaNaoEncontradaException;
+import br.ufc.llm.aula.exception.ConteudoGeradoAusenteException;
+import br.ufc.llm.aula.exception.ConteudoInsuficienteException;
 import br.ufc.llm.modulo.exception.ModuloNaoEncontradoException;
 import br.ufc.llm.usuario.exception.CpfJaCadastradoException;
 import br.ufc.llm.usuario.exception.EmailJaCadastradoException;
@@ -61,6 +63,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TransicaoStatusInvalidaException.class)
     public ResponseEntity<ApiResponse<Void>> handleTransicaoStatusInvalida(TransicaoStatusInvalidaException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiResponse.error(ex.getMessage(), 422));
+    }
+
+    @ExceptionHandler(ConteudoInsuficienteException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConteudoInsuficiente(ConteudoInsuficienteException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiResponse.error(ex.getMessage(), 422));
+    }
+
+    @ExceptionHandler(ConteudoGeradoAusenteException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConteudoGeradoAusente(ConteudoGeradoAusenteException ex) {
         return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(ApiResponse.error(ex.getMessage(), 422));
