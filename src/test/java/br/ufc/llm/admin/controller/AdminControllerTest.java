@@ -84,4 +84,24 @@ class AdminControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
+
+    @Test
+    @DisplayName("Deve retornar 200 ao desativar conta com sucesso")
+    void deveRetornar200AoDesativarConta() throws Exception {
+        doNothing().when(adminService).desativar(1L);
+
+        mockMvc.perform(patch("/admin/usuarios/1/desativar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao desativar conta com id inexistente")
+    void deveRetornar404AoDesativarContaInexistente() throws Exception {
+        doThrow(new UsuarioNaoEncontradoException(99L)).when(adminService).desativar(99L);
+
+        mockMvc.perform(patch("/admin/usuarios/99/desativar"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
 }

@@ -75,6 +75,27 @@ class AdminServiceTest {
                 .isInstanceOf(UsuarioNaoEncontradoException.class);
     }
 
+    @Test
+    @DisplayName("Deve desativar conta de usuário ativo")
+    void deveDesativarContaDeUsuarioAtivo() {
+        var usuario = usuario(1L, "Professor Silva", PerfilUsuario.PROFESSOR, StatusUsuario.ATIVO);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+
+        adminService.desativar(1L);
+
+        assertThat(usuario.getStatus()).isEqualTo(StatusUsuario.INATIVO);
+        verify(usuarioRepository).save(usuario);
+    }
+
+    @Test
+    @DisplayName("Deve lançar UsuarioNaoEncontradoException ao desativar id inexistente")
+    void deveLancarExcecaoAoDesativarIdInexistente() {
+        when(usuarioRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> adminService.desativar(99L))
+                .isInstanceOf(UsuarioNaoEncontradoException.class);
+    }
+
     private Usuario usuario(Long id, String nome, PerfilUsuario perfil, StatusUsuario status) {
         return Usuario.builder()
                 .id(id)

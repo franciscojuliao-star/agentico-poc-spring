@@ -28,4 +28,10 @@ public class AdminController {
         adminService.ativar(id);
         return ResponseEntity.ok(ApiResponse.ok(null, "Conta ativada com sucesso."));
     }
+
+    @PatchMapping("/usuarios/{id}/desativar")
+    public ResponseEntity<ApiResponse<Void>> desativar(@PathVariable Long id) {
+        adminService.desativar(id);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Conta desativada com sucesso."));
+    }
 }

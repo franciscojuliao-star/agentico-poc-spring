@@ -29,6 +29,13 @@ public class AdminService {
         usuarioRepository.save(usuario);
     }
 
+    public void desativar(Long id) {
+        var usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new UsuarioNaoEncontradoException(id));
+        usuario.setStatus(StatusUsuario.INATIVO);
+        usuarioRepository.save(usuario);
+    }
+
     private UsuarioResponse toResponse(Usuario usuario) {
         return new UsuarioResponse(
                 usuario.getId(),
