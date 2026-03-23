@@ -4,6 +4,7 @@ import br.ufc.llm.curso.domain.Curso;
 import br.ufc.llm.curso.domain.StatusCurso;
 import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
+import br.ufc.llm.curso.dto.EditarCursoRequest;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.repository.CursoRepository;
 
@@ -158,6 +159,50 @@ class CursoServiceTest {
 
         assertThat(resultado.ativos()).hasSize(2);
         assertThat(resultado.arquivados()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Deve editar os dados de um curso existente")
+    void deveEditarCursoComSucesso() {
+        var professor = professor();
+        var curso = cursoDosProfessor(professor);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+        when(cursoRepository.save(any())).thenReturn(curso);
+
+        var request = new EditarCursoRequest("Novo Título", "programação", "Nova descrição", "60h");
+        var response = cursoService.editar(1L, request, null, "prof@email.com");
+
+        assertThat(response.titulo()).isEqualTo("Novo Título");
+        assertThat(response.categoria()).isEqualTo("programação");
+        assertThat(response.cargaHoraria()).isEqualTo("60h");
+        verify(cursoRepository).save(curso);
+    }
+
+    @Test
+    @DisplayName("Deve substituir capa ao editar com novo arquivo")
+    void deveSubstituirCapaAoEditar() {
+        var professor = professor();
+        var curso = cursoDosProfessor(professor);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+        when(cursoRepository.save(any())).thenReturn(curso);
+
+        var novaCapa = new MockMultipartFile("capa", "nova.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
+        var request = new EditarCursoRequest("Novo Título", "programação", "Nova descrição", "60h");
+        var response = cursoService.editar(1L, request, novaCapa, "prof@email.com");
+
+        assertThat(response.capa()).isNotBlank();
+        assertThat(response.capa()).matches("\\d{14}_prof\\.jpg");
+    }
+
+    @Test
+    @DisplayName("Deve lançar CursoNaoEncontradoException ao editar curso de outro professor")
+    void deveLancarExcecaoAoEditarCursoDeOutroProfessor() {
+        var outroProfessor = Usuario.builder().id(2L).email("outro@email.com").build();
+        var curso = cursoDosProfessor(outroProfessor);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+
+        assertThatThrownBy(() -> cursoService.editar(1L, new EditarCursoRequest("T", "c", "d", "10h"), null, "prof@email.com"))
+                .isInstanceOf(CursoNaoEncontradoException.class);
     }
 
     @Test

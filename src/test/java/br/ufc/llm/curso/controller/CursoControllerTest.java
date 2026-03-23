@@ -126,6 +126,35 @@ class CursoControllerTest {
     }
 
     @Test
+    @DisplayName("Deve retornar 200 ao editar curso com sucesso")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200AoEditarCurso() throws Exception {
+        when(cursoService.editar(any(), any(), any(), any())).thenReturn(new CursoResponse(
+                1L, "Novo Título", "programação", "Nova descrição", "60h",
+                null, StatusCurso.RASCUNHO, 1L, LocalDateTime.now()
+        ));
+
+        var dados = dadosPart("{\"titulo\":\"Novo Título\",\"categoria\":\"programação\",\"descricao\":\"Nova descrição\",\"cargaHoraria\":\"60h\"}");
+
+        mockMvc.perform(multipart(org.springframework.http.HttpMethod.PUT, "/cursos/1").part(dados))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.titulo").value("Novo Título"));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao editar curso inexistente ou de outro professor")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar404AoEditarCursoInexistente() throws Exception {
+        when(cursoService.editar(any(), any(), any(), any())).thenThrow(new CursoNaoEncontradoException(99L));
+
+        var dados = dadosPart("{\"titulo\":\"T\",\"categoria\":\"c\",\"descricao\":\"d\",\"cargaHoraria\":\"10h\"}");
+
+        mockMvc.perform(multipart(org.springframework.http.HttpMethod.PUT, "/cursos/99").part(dados))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("Deve retornar 200 com cursos encontrados na busca por texto")
     @WithMockUser(username = "prof@email.com")
     void deveRetornar200NaBuscaPorTexto() throws Exception {

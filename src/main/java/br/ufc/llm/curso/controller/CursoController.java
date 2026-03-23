@@ -3,6 +3,7 @@ package br.ufc.llm.curso.controller;
 import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.dto.CursoResponse;
+import br.ufc.llm.curso.dto.EditarCursoRequest;
 import br.ufc.llm.curso.dto.ListaCursosResponse;
 import br.ufc.llm.curso.service.CursoService;
 import br.ufc.llm.shared.dto.ApiResponse;
@@ -32,6 +33,15 @@ public class CursoController {
     public ResponseEntity<ApiResponse<ListaCursosResponse>> listar(
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.ok(cursoService.listar(userDetails.getUsername()), "Cursos listados com sucesso."));
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CursoResponse>> editar(
+            @PathVariable Long id,
+            @RequestPart("dados") @Valid EditarCursoRequest request,
+            @RequestPart(value = "capa", required = false) MultipartFile capa,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(cursoService.editar(id, request, capa, userDetails.getUsername()), "Curso atualizado com sucesso."));
     }
 
     @GetMapping("/buscar")

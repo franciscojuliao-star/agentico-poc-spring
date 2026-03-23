@@ -5,6 +5,7 @@ import br.ufc.llm.curso.domain.StatusCurso;
 import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.dto.CursoResponse;
+import br.ufc.llm.curso.dto.EditarCursoRequest;
 import br.ufc.llm.curso.dto.ListaCursosResponse;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.repository.CursoRepository;
@@ -65,6 +66,26 @@ public class CursoService {
         var arquivados = cursoRepository.findByProfessorEmailAndStatusIn(emailProfessor, List.of(StatusCurso.ARQUIVADO))
                 .stream().map(this::toResponse).toList();
         return new ListaCursosResponse(ativos, arquivados);
+    }
+
+    public CursoResponse editar(Long cursoId, EditarCursoRequest request, MultipartFile capa, String emailProfessor) {
+        var curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new CursoNaoEncontradoException(cursoId));
+
+        if (!curso.getProfessor().getEmail().equals(emailProfessor)) {
+            throw new CursoNaoEncontradoException(cursoId);
+        }
+
+        if (capa != null && !capa.isEmpty()) {
+            curso.setCapa(salvarArquivo(capa, emailProfessor));
+        }
+
+        curso.setTitulo(request.titulo());
+        curso.setCategoria(request.categoria().toLowerCase());
+        curso.setDescricao(request.descricao());
+        curso.setCargaHoraria(request.cargaHoraria());
+
+        return toResponse(cursoRepository.save(curso));
     }
 
     public List<CursoResponse> buscar(String termo, String emailProfessor) {
