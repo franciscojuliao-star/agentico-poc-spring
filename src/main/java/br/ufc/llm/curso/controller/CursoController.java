@@ -3,6 +3,7 @@ package br.ufc.llm.curso.controller;
 import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.dto.CursoResponse;
+import br.ufc.llm.curso.dto.ListaCursosResponse;
 import br.ufc.llm.curso.service.CursoService;
 import br.ufc.llm.shared.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -23,6 +24,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class CursoController {
 
     private final CursoService cursoService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<ListaCursosResponse>> listar(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(cursoService.listar(userDetails.getUsername()), "Cursos listados com sucesso."));
+    }
 
     @PatchMapping("/{id}/dados-matricula")
     public ResponseEntity<ApiResponse<Void>> configurarMatricula(

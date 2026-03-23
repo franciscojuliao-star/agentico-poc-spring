@@ -6,6 +6,8 @@ import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.repository.CursoRepository;
+
+import java.util.List;
 import br.ufc.llm.usuario.domain.PerfilUsuario;
 import br.ufc.llm.usuario.domain.StatusUsuario;
 import br.ufc.llm.usuario.domain.Usuario;
@@ -137,6 +139,37 @@ class CursoServiceTest {
 
         assertThatThrownBy(() -> cursoService.configurarMatricula(1L, new ConfigurarMatriculaRequest(true, false, false), "prof@email.com"))
                 .isInstanceOf(CursoNaoEncontradoException.class);
+    }
+
+    @Test
+    @DisplayName("Deve listar cursos separados em ativos e arquivados")
+    void deveListarCursosSeparadosPorStatus() {
+        var professor = professor();
+        var cursoAtivo = cursoCom(professor, StatusCurso.PUBLICADO);
+        var cursoRascunho = cursoCom(professor, StatusCurso.RASCUNHO);
+        var cursoArquivado = cursoCom(professor, StatusCurso.ARQUIVADO);
+
+        when(cursoRepository.findByProfessorEmailAndStatusIn("prof@email.com", List.of(StatusCurso.RASCUNHO, StatusCurso.PUBLICADO)))
+                .thenReturn(List.of(cursoAtivo, cursoRascunho));
+        when(cursoRepository.findByProfessorEmailAndStatusIn("prof@email.com", List.of(StatusCurso.ARQUIVADO)))
+                .thenReturn(List.of(cursoArquivado));
+
+        var resultado = cursoService.listar("prof@email.com");
+
+        assertThat(resultado.ativos()).hasSize(2);
+        assertThat(resultado.arquivados()).hasSize(1);
+    }
+
+    private Curso cursoCom(Usuario professor, StatusCurso status) {
+        return Curso.builder()
+                .id(1L)
+                .titulo("Curso")
+                .categoria("tecnologia")
+                .descricao("Descrição")
+                .cargaHoraria("40h")
+                .status(status)
+                .professor(professor)
+                .build();
     }
 
     private Curso cursoDosProfessor(Usuario professor) {

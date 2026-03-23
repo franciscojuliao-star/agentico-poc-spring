@@ -1,9 +1,11 @@
 package br.ufc.llm.curso.service;
 
 import br.ufc.llm.curso.domain.Curso;
+import br.ufc.llm.curso.domain.StatusCurso;
 import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.dto.CursoResponse;
+import br.ufc.llm.curso.dto.ListaCursosResponse;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.repository.CursoRepository;
 import br.ufc.llm.usuario.exception.UsuarioNaoEncontradoException;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -54,6 +57,14 @@ public class CursoService {
                 .build();
 
         return toResponse(cursoRepository.save(curso));
+    }
+
+    public ListaCursosResponse listar(String emailProfessor) {
+        var ativos = cursoRepository.findByProfessorEmailAndStatusIn(emailProfessor, List.of(StatusCurso.RASCUNHO, StatusCurso.PUBLICADO))
+                .stream().map(this::toResponse).toList();
+        var arquivados = cursoRepository.findByProfessorEmailAndStatusIn(emailProfessor, List.of(StatusCurso.ARQUIVADO))
+                .stream().map(this::toResponse).toList();
+        return new ListaCursosResponse(ativos, arquivados);
     }
 
     public void configurarMatricula(Long cursoId, ConfigurarMatriculaRequest request, String emailProfessor) {

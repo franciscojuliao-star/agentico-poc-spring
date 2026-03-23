@@ -2,6 +2,7 @@ package br.ufc.llm.curso.controller;
 
 import br.ufc.llm.curso.domain.StatusCurso;
 import br.ufc.llm.curso.dto.CursoResponse;
+import br.ufc.llm.curso.dto.ListaCursosResponse;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.service.CursoService;
 import br.ufc.llm.shared.security.JwtAuthFilter;
@@ -21,10 +22,13 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -103,6 +107,22 @@ class CursoControllerTest {
 
         mockMvc.perform(multipart("/cursos").part(dados))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Deve retornar 200 com cursos separados por ativos e arquivados")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200ComCursosListados() throws Exception {
+        var curso = new CursoResponse(1L, "Curso de Java", "tecnologia", "Descrição", "40h", null, StatusCurso.PUBLICADO, 1L, LocalDateTime.now());
+        when(cursoService.listar(any())).thenReturn(new ListaCursosResponse(List.of(curso), List.of()));
+
+        mockMvc.perform(get("/cursos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.ativos").isArray())
+                .andExpect(jsonPath("$.data.ativos.length()").value(1))
+                .andExpect(jsonPath("$.data.arquivados").isArray())
+                .andExpect(jsonPath("$.data.arquivados.length()").value(0));
     }
 
     @Test
