@@ -24,6 +24,9 @@ spring:
     openai:
       api-key: sk-test
 
+upload:
+  directory: /tmp/poc-llm-ufc-test-uploads
+
 security:
   jwt:
     secret: dGVzdC1zZWNyZXQta2V5LXBvYy1sbG0tdWZjLXRlc3RlLTIwMjQ=
