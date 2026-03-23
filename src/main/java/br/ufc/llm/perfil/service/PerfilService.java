@@ -16,8 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -60,7 +61,9 @@ public class PerfilService {
     public void atualizarFoto(MultipartFile arquivo, String email) {
         validarImagem(arquivo);
 
-        String nomeArquivo = UUID.randomUUID() + extrairExtensao(arquivo.getOriginalFilename());
+        String nomeArquivo = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+                + "_" + extrairNomeUsuario(email)
+                + extrairExtensao(arquivo.getOriginalFilename());
         Path destino = Path.of(uploadDir, nomeArquivo);
 
         try {
@@ -116,6 +119,11 @@ public class PerfilService {
     private String mascararCpf(String cpf) {
         if (cpf == null || cpf.length() < 2) return cpf;
         return "***.***.***-" + cpf.substring(cpf.length() - 2);
+    }
+
+    private String extrairNomeUsuario(String email) {
+        int arroba = email.indexOf('@');
+        return arroba > 0 ? email.substring(0, arroba) : email;
     }
 
     private String extrairExtensao(String nomeOriginal) {

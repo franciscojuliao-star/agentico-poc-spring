@@ -52,6 +52,7 @@ class PerfilServiceTest {
         perfilService.atualizarFoto(arquivo, "prof@email.com");
 
         assertThat(usuario.getFotoPerfil()).isNotBlank();
+        assertThat(usuario.getFotoPerfil()).matches("\\d{14}_prof\\.jpg");
         verify(usuarioRepository).save(usuario);
     }
 
