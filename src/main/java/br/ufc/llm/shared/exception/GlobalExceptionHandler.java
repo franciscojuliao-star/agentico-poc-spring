@@ -2,6 +2,7 @@ package br.ufc.llm.shared.exception;
 
 import br.ufc.llm.auth.exception.ContaInativaException;
 import br.ufc.llm.auth.exception.CredenciaisInvalidasException;
+import br.ufc.llm.auth.exception.TokenInvalidoOuExpiradoException;
 import br.ufc.llm.shared.dto.ApiResponse;
 import br.ufc.llm.usuario.exception.CpfJaCadastradoException;
 import br.ufc.llm.usuario.exception.EmailJaCadastradoException;
@@ -53,5 +54,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(ex.getMessage(), 403));
+    }
+
+    @ExceptionHandler(TokenInvalidoOuExpiradoException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTokenInvalido(TokenInvalidoOuExpiradoException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage(), 400));
     }
 }

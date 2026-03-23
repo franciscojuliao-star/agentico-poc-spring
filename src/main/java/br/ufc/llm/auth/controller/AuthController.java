@@ -1,9 +1,8 @@
 package br.ufc.llm.auth.controller;
 
-import br.ufc.llm.auth.dto.LoginRequest;
-import br.ufc.llm.auth.dto.LoginResponse;
-import br.ufc.llm.auth.dto.RefreshRequest;
+import br.ufc.llm.auth.dto.*;
 import br.ufc.llm.auth.service.AuthService;
+import br.ufc.llm.auth.service.RecuperacaoSenhaService;
 import br.ufc.llm.shared.dto.ApiResponse;
 import br.ufc.llm.usuario.dto.CadastroRequest;
 import br.ufc.llm.usuario.dto.UsuarioResponse;
@@ -21,6 +20,7 @@ public class AuthController {
 
     private final UsuarioService usuarioService;
     private final AuthService authService;
+    private final RecuperacaoSenhaService recuperacaoSenhaService;
 
     @PostMapping("/cadastro")
     public ResponseEntity<ApiResponse<UsuarioResponse>> cadastrar(@Valid @RequestBody CadastroRequest request) {
@@ -40,5 +40,17 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> refresh(@Valid @RequestBody RefreshRequest request) {
         LoginResponse response = authService.refresh(request.refreshToken());
         return ResponseEntity.ok(ApiResponse.ok(response, "Token renovado com sucesso."));
+    }
+
+    @PostMapping("/recuperar-senha")
+    public ResponseEntity<ApiResponse<Void>> recuperarSenha(@Valid @RequestBody RecuperarSenhaRequest request) {
+        recuperacaoSenhaService.solicitarRecuperacao(request.email());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Se o e-mail estiver cadastrado, você receberá as instruções em breve."));
+    }
+
+    @PostMapping("/redefinir-senha")
+    public ResponseEntity<ApiResponse<Void>> redefinirSenha(@Valid @RequestBody RedefinirSenhaRequest request) {
+        recuperacaoSenhaService.redefinirSenha(request.token(), request.novaSenha());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Senha redefinida com sucesso."));
     }
 }
