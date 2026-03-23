@@ -5,6 +5,7 @@ import br.ufc.llm.perfil.exception.SenhaAtualInvalidaException;
 import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
 import br.ufc.llm.auth.exception.CredenciaisInvalidasException;
 import br.ufc.llm.shared.dto.ApiResponse;
+import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.usuario.exception.CpfJaCadastradoException;
 import br.ufc.llm.usuario.exception.EmailJaCadastradoException;
 import br.ufc.llm.usuario.exception.UsuarioNaoEncontradoException;
@@ -42,6 +43,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ex.getMessage(), 400));
+    }
+
+    @ExceptionHandler(CursoNaoEncontradoException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCursoNaoEncontrado(CursoNaoEncontradoException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), 404));
     }
 
     @ExceptionHandler(UsuarioNaoEncontradoException.class)

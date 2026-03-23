@@ -1,5 +1,6 @@
 package br.ufc.llm.curso.controller;
 
+import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.dto.CursoResponse;
 import br.ufc.llm.curso.service.CursoService;
@@ -22,6 +23,15 @@ import org.springframework.web.multipart.MultipartFile;
 public class CursoController {
 
     private final CursoService cursoService;
+
+    @PatchMapping("/{id}/dados-matricula")
+    public ResponseEntity<ApiResponse<Void>> configurarMatricula(
+            @PathVariable Long id,
+            @RequestBody ConfigurarMatriculaRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        cursoService.configurarMatricula(id, request, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Dados de matrícula configurados com sucesso."));
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CursoResponse>> criar(

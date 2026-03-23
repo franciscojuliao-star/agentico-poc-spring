@@ -2,7 +2,9 @@ package br.ufc.llm.curso.service;
 
 import br.ufc.llm.curso.domain.Curso;
 import br.ufc.llm.curso.domain.StatusCurso;
+import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
+import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.repository.CursoRepository;
 import br.ufc.llm.usuario.domain.PerfilUsuario;
 import br.ufc.llm.usuario.domain.StatusUsuario;
@@ -22,6 +24,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -97,6 +100,54 @@ class CursoServiceTest {
         var response = cursoService.criar(request, null, "prof@email.com");
 
         assertThat(response.categoria()).isEqualTo("tecnologia");
+    }
+
+    @Test
+    @DisplayName("Deve configurar dados de matrícula do curso")
+    void deveConfigurarDadosDeMatricula() {
+        var professor = professor();
+        var curso = cursoDosProfessor(professor);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+        when(cursoRepository.save(any())).thenReturn(curso);
+
+        var request = new ConfigurarMatriculaRequest(true, false, true);
+        cursoService.configurarMatricula(1L, request, "prof@email.com");
+
+        assertThat(curso.isRequerEndereco()).isTrue();
+        assertThat(curso.isRequerGenero()).isFalse();
+        assertThat(curso.isRequerIdade()).isTrue();
+        verify(cursoRepository).save(curso);
+    }
+
+    @Test
+    @DisplayName("Deve lançar CursoNaoEncontradoException quando curso não existe")
+    void deveLancarExcecaoQuandoCursoNaoEncontrado() {
+        when(cursoRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cursoService.configurarMatricula(99L, new ConfigurarMatriculaRequest(true, false, false), "prof@email.com"))
+                .isInstanceOf(CursoNaoEncontradoException.class);
+    }
+
+    @Test
+    @DisplayName("Deve lançar CursoNaoEncontradoException quando professor não é dono do curso")
+    void deveLancarExcecaoQuandoProfessorNaoEDono() {
+        var outroProfessor = Usuario.builder().id(2L).email("outro@email.com").build();
+        var curso = cursoDosProfessor(outroProfessor);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+
+        assertThatThrownBy(() -> cursoService.configurarMatricula(1L, new ConfigurarMatriculaRequest(true, false, false), "prof@email.com"))
+                .isInstanceOf(CursoNaoEncontradoException.class);
+    }
+
+    private Curso cursoDosProfessor(Usuario professor) {
+        return Curso.builder()
+                .id(1L)
+                .titulo("Curso de Java")
+                .categoria("tecnologia")
+                .descricao("Descrição")
+                .cargaHoraria("40h")
+                .professor(professor)
+                .build();
     }
 
     private Usuario professor() {

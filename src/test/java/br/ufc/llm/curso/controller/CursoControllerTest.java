@@ -2,6 +2,7 @@ package br.ufc.llm.curso.controller;
 
 import br.ufc.llm.curso.domain.StatusCurso;
 import br.ufc.llm.curso.dto.CursoResponse;
+import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.service.CursoService;
 import br.ufc.llm.shared.security.JwtAuthFilter;
 import org.junit.jupiter.api.DisplayName;
@@ -18,9 +19,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CursoControllerTest {
 
     @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
 
     @MockitoBean private CursoService cursoService;
     @MockitoBean private JwtAuthFilter jwtAuthFilter;
@@ -96,6 +103,36 @@ class CursoControllerTest {
 
         mockMvc.perform(multipart("/cursos").part(dados))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Deve retornar 200 ao configurar dados de matrícula")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200AoConfigurarDadosDeMatricula() throws Exception {
+        doNothing().when(cursoService).configurarMatricula(any(), any(), any());
+
+        mockMvc.perform(patch("/cursos/1/dados-matricula")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                "requerEndereco", true, "requerGenero", false, "requerIdade", true
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao configurar matrícula de curso inexistente")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar404AoConfigurarMatriculaDeCursoInexistente() throws Exception {
+        doThrow(new CursoNaoEncontradoException(99L)).when(cursoService).configurarMatricula(any(), any(), any());
+
+        mockMvc.perform(patch("/cursos/99/dados-matricula")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                "requerEndereco", true, "requerGenero", false, "requerIdade", false
+                        ))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     private MockPart dadosPart(String json) {

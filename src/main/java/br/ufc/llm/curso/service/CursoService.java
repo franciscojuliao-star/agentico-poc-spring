@@ -1,8 +1,10 @@
 package br.ufc.llm.curso.service;
 
 import br.ufc.llm.curso.domain.Curso;
+import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.dto.CursoResponse;
+import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.repository.CursoRepository;
 import br.ufc.llm.usuario.exception.UsuarioNaoEncontradoException;
 import br.ufc.llm.usuario.repository.UsuarioRepository;
@@ -52,6 +54,20 @@ public class CursoService {
                 .build();
 
         return toResponse(cursoRepository.save(curso));
+    }
+
+    public void configurarMatricula(Long cursoId, ConfigurarMatriculaRequest request, String emailProfessor) {
+        var curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new CursoNaoEncontradoException(cursoId));
+
+        if (!curso.getProfessor().getEmail().equals(emailProfessor)) {
+            throw new CursoNaoEncontradoException(cursoId);
+        }
+
+        curso.setRequerEndereco(request.requerEndereco());
+        curso.setRequerGenero(request.requerGenero());
+        curso.setRequerIdade(request.requerIdade());
+        cursoRepository.save(curso);
     }
 
     private String salvarArquivo(MultipartFile arquivo, String email) {
