@@ -4,6 +4,7 @@ import br.ufc.llm.curso.domain.StatusCurso;
 import br.ufc.llm.curso.dto.CursoResponse;
 import br.ufc.llm.curso.dto.ListaCursosResponse;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
+import br.ufc.llm.curso.exception.TransicaoStatusInvalidaException;
 import br.ufc.llm.curso.service.CursoService;
 import br.ufc.llm.shared.security.JwtAuthFilter;
 import org.junit.jupiter.api.DisplayName;
@@ -123,6 +124,46 @@ class CursoControllerTest {
                 .andExpect(jsonPath("$.data.ativos.length()").value(1))
                 .andExpect(jsonPath("$.data.arquivados").isArray())
                 .andExpect(jsonPath("$.data.arquivados.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 200 ao publicar curso (US-P13)")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200AoPublicarCurso() throws Exception {
+        doNothing().when(cursoService).alterarStatus(any(), any(), any());
+
+        mockMvc.perform(patch("/cursos/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PUBLICADO\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 200 ao arquivar curso (US-P14)")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200AoArquivarCurso() throws Exception {
+        doNothing().when(cursoService).alterarStatus(any(), any(), any());
+
+        mockMvc.perform(patch("/cursos/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"ARQUIVADO\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 422 para transição de status inválida")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar422ParaTransicaoInvalida() throws Exception {
+        doThrow(new TransicaoStatusInvalidaException(StatusCurso.ARQUIVADO, StatusCurso.PUBLICADO))
+                .when(cursoService).alterarStatus(any(), any(), any());
+
+        mockMvc.perform(patch("/cursos/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PUBLICADO\"}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.status").value(422));
     }
 
     @Test

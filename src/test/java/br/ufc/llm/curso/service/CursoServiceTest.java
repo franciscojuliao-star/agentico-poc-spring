@@ -2,10 +2,12 @@ package br.ufc.llm.curso.service;
 
 import br.ufc.llm.curso.domain.Curso;
 import br.ufc.llm.curso.domain.StatusCurso;
+import br.ufc.llm.curso.dto.AlterarStatusRequest;
 import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.dto.EditarCursoRequest;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
+import br.ufc.llm.curso.exception.TransicaoStatusInvalidaException;
 import br.ufc.llm.curso.repository.CursoRepository;
 
 import java.util.List;
@@ -159,6 +161,44 @@ class CursoServiceTest {
 
         assertThat(resultado.ativos()).hasSize(2);
         assertThat(resultado.arquivados()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Deve publicar curso em RASCUNHO (US-P13)")
+    void devePublicarCurso() {
+        var professor = professor();
+        var curso = cursoCom(professor, StatusCurso.RASCUNHO);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+        when(cursoRepository.save(any())).thenReturn(curso);
+
+        cursoService.alterarStatus(1L, new AlterarStatusRequest(StatusCurso.PUBLICADO), "prof@email.com");
+
+        assertThat(curso.getStatus()).isEqualTo(StatusCurso.PUBLICADO);
+        verify(cursoRepository).save(curso);
+    }
+
+    @Test
+    @DisplayName("Deve arquivar curso publicado (US-P14)")
+    void deveArquivarCurso() {
+        var professor = professor();
+        var curso = cursoCom(professor, StatusCurso.PUBLICADO);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+        when(cursoRepository.save(any())).thenReturn(curso);
+
+        cursoService.alterarStatus(1L, new AlterarStatusRequest(StatusCurso.ARQUIVADO), "prof@email.com");
+
+        assertThat(curso.getStatus()).isEqualTo(StatusCurso.ARQUIVADO);
+    }
+
+    @Test
+    @DisplayName("Deve lançar TransicaoStatusInvalidaException ao publicar curso arquivado")
+    void deveLancarExcecaoAoPublicarCursoArquivado() {
+        var professor = professor();
+        var curso = cursoCom(professor, StatusCurso.ARQUIVADO);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+
+        assertThatThrownBy(() -> cursoService.alterarStatus(1L, new AlterarStatusRequest(StatusCurso.PUBLICADO), "prof@email.com"))
+                .isInstanceOf(TransicaoStatusInvalidaException.class);
     }
 
     @Test

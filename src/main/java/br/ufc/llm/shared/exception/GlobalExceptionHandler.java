@@ -6,6 +6,7 @@ import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
 import br.ufc.llm.auth.exception.CredenciaisInvalidasException;
 import br.ufc.llm.shared.dto.ApiResponse;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
+import br.ufc.llm.curso.exception.TransicaoStatusInvalidaException;
 import br.ufc.llm.usuario.exception.CpfJaCadastradoException;
 import br.ufc.llm.usuario.exception.EmailJaCadastradoException;
 import br.ufc.llm.usuario.exception.UsuarioNaoEncontradoException;
@@ -54,6 +55,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ex.getMessage(), 400));
+    }
+
+    @ExceptionHandler(TransicaoStatusInvalidaException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTransicaoStatusInvalida(TransicaoStatusInvalidaException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiResponse.error(ex.getMessage(), 422));
     }
 
     @ExceptionHandler(CursoNaoEncontradoException.class)

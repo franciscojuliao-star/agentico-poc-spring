@@ -2,12 +2,14 @@ package br.ufc.llm.curso.service;
 
 import br.ufc.llm.curso.domain.Curso;
 import br.ufc.llm.curso.domain.StatusCurso;
+import br.ufc.llm.curso.dto.AlterarStatusRequest;
 import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.dto.CursoResponse;
 import br.ufc.llm.curso.dto.EditarCursoRequest;
 import br.ufc.llm.curso.dto.ListaCursosResponse;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
+import br.ufc.llm.curso.exception.TransicaoStatusInvalidaException;
 import br.ufc.llm.curso.repository.CursoRepository;
 import br.ufc.llm.usuario.exception.UsuarioNaoEncontradoException;
 import br.ufc.llm.usuario.repository.UsuarioRepository;
@@ -91,6 +93,22 @@ public class CursoService {
     public List<CursoResponse> buscar(String termo, String emailProfessor) {
         return cursoRepository.buscarPorTexto(termo, emailProfessor)
                 .stream().map(this::toResponse).toList();
+    }
+
+    public void alterarStatus(Long cursoId, AlterarStatusRequest request, String emailProfessor) {
+        var curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new CursoNaoEncontradoException(cursoId));
+
+        if (!curso.getProfessor().getEmail().equals(emailProfessor)) {
+            throw new CursoNaoEncontradoException(cursoId);
+        }
+
+        if (curso.getStatus() == StatusCurso.ARQUIVADO) {
+            throw new TransicaoStatusInvalidaException(curso.getStatus(), request.status());
+        }
+
+        curso.setStatus(request.status());
+        cursoRepository.save(curso);
     }
 
     public void configurarMatricula(Long cursoId, ConfigurarMatriculaRequest request, String emailProfessor) {

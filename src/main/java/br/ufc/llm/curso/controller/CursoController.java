@@ -1,5 +1,6 @@
 package br.ufc.llm.curso.controller;
 
+import br.ufc.llm.curso.dto.AlterarStatusRequest;
 import br.ufc.llm.curso.dto.ConfigurarMatriculaRequest;
 import br.ufc.llm.curso.dto.CriarCursoRequest;
 import br.ufc.llm.curso.dto.CursoResponse;
@@ -49,6 +50,15 @@ public class CursoController {
             @RequestParam @NotBlank(message = "Termo de busca é obrigatório") String q,
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.ok(cursoService.buscar(q, userDetails.getUsername()), "Busca realizada com sucesso."));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> alterarStatus(
+            @PathVariable Long id,
+            @RequestBody @Valid AlterarStatusRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        cursoService.alterarStatus(id, request, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(null, "Status do curso atualizado com sucesso."));
     }
 
     @PatchMapping("/{id}/dados-matricula")
