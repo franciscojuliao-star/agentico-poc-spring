@@ -156,6 +156,13 @@
 			<optional>true</optional>
 		</dependency>
 
+		<!-- ===== Dotenv (.env → variáveis de ambiente locais) ===== -->
+		<dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>4.0.0</version>
+		</dependency>
+
 		<!-- ===== Testes ===== -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
