@@ -3,15 +3,14 @@ package br.ufc.llm.admin.controller;
 import br.ufc.llm.admin.service.AdminService;
 import br.ufc.llm.shared.dto.ApiResponse;
 import br.ufc.llm.usuario.dto.UsuarioResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
-import java.util.List;
-
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
