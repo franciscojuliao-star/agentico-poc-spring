@@ -10,6 +10,10 @@ import br.ufc.llm.curso.exception.TransicaoStatusInvalidaException;
 import br.ufc.llm.aula.exception.AulaNaoEncontradaException;
 import br.ufc.llm.aula.exception.ConteudoGeradoAusenteException;
 import br.ufc.llm.aula.exception.ConteudoInsuficienteException;
+import br.ufc.llm.prova.exception.AlternativaNaoEncontradaException;
+import br.ufc.llm.prova.exception.PerguntaNaoEncontradaException;
+import br.ufc.llm.prova.exception.ProvaJaExisteException;
+import br.ufc.llm.prova.exception.ProvaNaoEncontradaException;
 import br.ufc.llm.modulo.exception.ModuloNaoEncontradoException;
 import br.ufc.llm.usuario.exception.CpfJaCadastradoException;
 import br.ufc.llm.usuario.exception.EmailJaCadastradoException;
@@ -66,6 +70,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(ApiResponse.error(ex.getMessage(), 422));
+    }
+
+    @ExceptionHandler(ProvaJaExisteException.class)
+    public ResponseEntity<ApiResponse<Void>> handleProvaJaExiste(ProvaJaExisteException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage(), 409));
+    }
+
+    @ExceptionHandler(ProvaNaoEncontradaException.class)
+    public ResponseEntity<ApiResponse<Void>> handleProvaNaoEncontrada(ProvaNaoEncontradaException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), 404));
+    }
+
+    @ExceptionHandler(PerguntaNaoEncontradaException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePerguntaNaoEncontrada(PerguntaNaoEncontradaException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), 404));
+    }
+
+    @ExceptionHandler(AlternativaNaoEncontradaException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAlternativaNaoEncontrada(AlternativaNaoEncontradaException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ex.getMessage(), 404));
     }
 
     @ExceptionHandler(ConteudoInsuficienteException.class)
