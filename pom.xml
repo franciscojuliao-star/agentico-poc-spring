@@ -95,7 +95,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- ===== Spring AI + OpenAI ===== -->
+		<!-- ===== Spring AI + OpenAI (usado com Gemini via endpoint compatível) ===== -->
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-starter-model-openai</artifactId>

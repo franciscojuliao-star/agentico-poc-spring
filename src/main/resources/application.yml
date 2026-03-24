@@ -22,6 +22,11 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -36,10 +41,11 @@ spring:
 
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY:sk-placeholder}
+      api-key: ${GOOGLE_AI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai
       chat:
         options:
-          model: gpt-4o
+          model: gemini-2.0-flash
 
 server:
   port: 8080
