@@ -22,6 +22,13 @@ public class ModuloController {
 
     private final ModuloService moduloService;
 
+    @GetMapping("/cursos/{cursoId}/modulos")
+    public ResponseEntity<ApiResponse<java.util.List<ModuloResponse>>> listar(
+            @PathVariable Long cursoId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(moduloService.listar(cursoId, userDetails.getUsername()), "Módulos listados com sucesso."));
+    }
+
     @PostMapping("/cursos/{cursoId}/modulos")
     public ResponseEntity<ApiResponse<ModuloResponse>> adicionar(
             @PathVariable Long cursoId,

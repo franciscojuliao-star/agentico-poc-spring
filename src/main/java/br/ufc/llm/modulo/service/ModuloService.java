@@ -35,6 +35,20 @@ public class ModuloService {
         this.uploadDir = uploadDir;
     }
 
+    public List<ModuloResponse> listar(Long cursoId, String emailProfessor) {
+        var curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new CursoNaoEncontradoException(cursoId));
+
+        if (!curso.getProfessor().getEmail().equals(emailProfessor)) {
+            throw new CursoNaoEncontradoException(cursoId);
+        }
+
+        return moduloRepository.findByCursoIdOrderByOrdem(cursoId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     public ModuloResponse adicionar(Long cursoId, String emailProfessor) {
         var curso = cursoRepository.findById(cursoId)
                 .orElseThrow(() -> new CursoNaoEncontradoException(cursoId));
