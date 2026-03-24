@@ -43,6 +43,16 @@ public class AulaService {
         this.uploadDir = uploadDir;
     }
 
+    public List<AulaResponse> listar(Long moduloId, String emailProfessor) {
+        moduloRepository.findByIdAndCursoProfessorEmail(moduloId, emailProfessor)
+                .orElseThrow(() -> new ModuloNaoEncontradoException(moduloId));
+
+        return aulaRepository.findByModuloIdOrderByOrdem(moduloId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     public AulaResponse adicionar(Long moduloId, CriarAulaRequest request, String emailProfessor) {
         var modulo = moduloRepository.findByIdAndCursoProfessorEmail(moduloId, emailProfessor)
                 .orElseThrow(() -> new ModuloNaoEncontradoException(moduloId));

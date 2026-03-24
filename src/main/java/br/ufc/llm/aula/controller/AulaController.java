@@ -24,10 +24,17 @@ public class AulaController {
 
     private final AulaService aulaService;
 
-    @PostMapping(value = "/modulos/{moduloId}/aulas", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @GetMapping("/modulos/{moduloId}/aulas")
+    public ResponseEntity<ApiResponse<java.util.List<AulaResponse>>> listar(
+            @PathVariable Long moduloId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(aulaService.listar(moduloId, userDetails.getUsername()), "Aulas listadas com sucesso."));
+    }
+
+    @PostMapping(value = "/modulos/{moduloId}/aulas")
     public ResponseEntity<ApiResponse<AulaResponse>> adicionar(
             @PathVariable Long moduloId,
-            @RequestPart("dados") @Valid CriarAulaRequest request,
+            @RequestBody @Valid CriarAulaRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         var response = aulaService.adicionar(moduloId, request, userDetails.getUsername());
         return ResponseEntity
