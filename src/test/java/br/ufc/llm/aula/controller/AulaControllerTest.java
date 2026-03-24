@@ -35,10 +35,24 @@ class AulaControllerTest {
     @MockitoBean private JwtAuthFilter jwtAuthFilter;
 
     @Test
+    @DisplayName("Deve retornar 200 ao listar aulas do módulo (US-P20)")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200AoListarAulas() throws Exception {
+        when(aulaService.listar(eq(1L), any())).thenReturn(java.util.List.of(
+                new AulaResponse(1L, "Aula 1", 1, null, null, null, null, 1L),
+                new AulaResponse(2L, "Aula 2", 2, null, null, null, null, 1L)));
+
+        mockMvc.perform(get("/modulos/1/aulas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.length()").value(2));
+    }
+
+    @Test
     @DisplayName("Deve retornar 201 ao adicionar aula (US-P20)")
     @WithMockUser(username = "prof@email.com")
     void deveRetornar201AoAdicionarAula() throws Exception {
-        when(aulaService.adicionar(eq(1L), any(), any())).thenReturn(
+        when(aulaService.adicionar(eq(1L), any(), any(), any())).thenReturn(
                 new AulaResponse(1L, "Introdução ao Java", 1, null, null, null, null, 1L));
 
         var dados = dadosPart("{\"nome\": \"Introdução ao Java\"}");
@@ -48,6 +62,21 @@ class AulaControllerTest {
                 .andExpect(jsonPath("$.status").value(201))
                 .andExpect(jsonPath("$.data.nome").value("Introdução ao Java"))
                 .andExpect(jsonPath("$.data.ordem").value(1));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 201 ao adicionar aula com arquivo (US-P21)")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar201AoAdicionarAulaComArquivo() throws Exception {
+        when(aulaService.adicionar(eq(1L), any(), any(), any())).thenReturn(
+                new AulaResponse(1L, "Aula com PDF", 1, "slides.pdf", TipoArquivo.PDF, null, null, 1L));
+
+        var dados = dadosPart("{\"nome\": \"Aula com PDF\"}");
+        var arquivo = new MockMultipartFile("arquivo", "slides.pdf", "application/pdf", new byte[]{1, 2, 3});
+
+        mockMvc.perform(multipart("/modulos/1/aulas").part(dados).file(arquivo))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.tipoArquivo").value("PDF"));
     }
 
     @Test
@@ -64,7 +93,7 @@ class AulaControllerTest {
     @DisplayName("Deve retornar 404 ao adicionar aula em módulo inexistente")
     @WithMockUser(username = "prof@email.com")
     void deveRetornar404AoAdicionarAulaModuloInexistente() throws Exception {
-        doThrow(new ModuloNaoEncontradoException(99L)).when(aulaService).adicionar(eq(99L), any(), any());
+        doThrow(new ModuloNaoEncontradoException(99L)).when(aulaService).adicionar(eq(99L), any(), any(), any());
 
         var dados = dadosPart("{\"nome\": \"Aula\"}");
 

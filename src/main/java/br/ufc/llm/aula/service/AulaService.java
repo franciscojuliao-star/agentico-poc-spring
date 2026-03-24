@@ -53,20 +53,25 @@ public class AulaService {
                 .toList();
     }
 
-    public AulaResponse adicionar(Long moduloId, CriarAulaRequest request, String emailProfessor) {
+    public AulaResponse adicionar(Long moduloId, CriarAulaRequest request, MultipartFile arquivo, String emailProfessor) {
         var modulo = moduloRepository.findByIdAndCursoProfessorEmail(moduloId, emailProfessor)
                 .orElseThrow(() -> new ModuloNaoEncontradoException(moduloId));
 
         int total = aulaRepository.countByModuloId(moduloId);
         int novaOrdem = total + 1;
 
-        var aula = Aula.builder()
+        var builder = Aula.builder()
                 .nome(request.nome())
                 .ordem(novaOrdem)
-                .modulo(modulo)
-                .build();
+                .conteudoCkEditor(request.conteudoCkEditor())
+                .modulo(modulo);
 
-        return toResponse(aulaRepository.save(aula));
+        if (arquivo != null && !arquivo.isEmpty()) {
+            builder.arquivo(salvarArquivo(arquivo, emailProfessor))
+                   .tipoArquivo(detectarTipo(arquivo.getOriginalFilename()));
+        }
+
+        return toResponse(aulaRepository.save(builder.build()));
     }
 
     public AulaResponse atualizarArquivo(Long aulaId, MultipartFile arquivo, String emailProfessor) {

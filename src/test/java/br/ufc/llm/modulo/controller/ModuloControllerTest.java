@@ -33,6 +33,30 @@ class ModuloControllerTest {
     @MockitoBean private JwtAuthFilter jwtAuthFilter;
 
     @Test
+    @DisplayName("Deve retornar 200 ao listar módulos do curso (US-P16)")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar200AoListarModulos() throws Exception {
+        when(moduloService.listar(eq(1L), any())).thenReturn(java.util.List.of(
+                new ModuloResponse(1L, "Módulo 01", 1, null, 1L),
+                new ModuloResponse(2L, "Módulo 02", 2, null, 1L)));
+
+        mockMvc.perform(get("/cursos/1/modulos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.length()").value(2));
+    }
+
+    @Test
+    @DisplayName("Deve retornar 404 ao listar módulos de curso inexistente")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar404AoListarModulosCursoInexistente() throws Exception {
+        doThrow(new CursoNaoEncontradoException(99L)).when(moduloService).listar(eq(99L), any());
+
+        mockMvc.perform(get("/cursos/99/modulos"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("Deve retornar 201 ao adicionar módulo (US-P16)")
     @WithMockUser(username = "prof@email.com")
     void deveRetornar201AoAdicionarModulo() throws Exception {

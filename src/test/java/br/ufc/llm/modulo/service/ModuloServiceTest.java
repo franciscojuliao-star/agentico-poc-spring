@@ -47,6 +47,41 @@ class ModuloServiceTest {
     }
 
     @Test
+    @DisplayName("Deve listar módulos de um curso ordenados (US-P16)")
+    void deveListarModulosDoCurso() {
+        var professor = professor();
+        var curso = curso(professor);
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso));
+        when(moduloRepository.findByCursoIdOrderByOrdem(1L))
+                .thenReturn(List.of(moduloCom(professor, 1L, 1), moduloCom(professor, 2L, 2)));
+
+        var resultado = moduloService.listar(1L, "prof@email.com");
+
+        assertThat(resultado).hasSize(2);
+        assertThat(resultado.get(0).ordem()).isEqualTo(1);
+        assertThat(resultado.get(1).ordem()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Deve lançar CursoNaoEncontradoException ao listar módulos de curso inexistente")
+    void deveLancarExcecaoAoListarModulosCursoInexistente() {
+        when(cursoRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> moduloService.listar(99L, "prof@email.com"))
+                .isInstanceOf(CursoNaoEncontradoException.class);
+    }
+
+    @Test
+    @DisplayName("Deve lançar CursoNaoEncontradoException ao listar módulos de curso de outro professor")
+    void deveLancarExcecaoAoListarModulosCursoDeOutroProfessor() {
+        var outroProfessor = Usuario.builder().id(2L).email("outro@email.com").build();
+        when(cursoRepository.findById(1L)).thenReturn(Optional.of(curso(outroProfessor)));
+
+        assertThatThrownBy(() -> moduloService.listar(1L, "prof@email.com"))
+                .isInstanceOf(CursoNaoEncontradoException.class);
+    }
+
+    @Test
     @DisplayName("Deve adicionar módulo com nome gerado automaticamente (US-P16)")
     void deveAdicionarModuloComNomeGerado() {
         var professor = professor();

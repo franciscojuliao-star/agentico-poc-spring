@@ -31,12 +31,13 @@ public class AulaController {
         return ResponseEntity.ok(ApiResponse.ok(aulaService.listar(moduloId, userDetails.getUsername()), "Aulas listadas com sucesso."));
     }
 
-    @PostMapping(value = "/modulos/{moduloId}/aulas")
+    @PostMapping(value = "/modulos/{moduloId}/aulas", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<AulaResponse>> adicionar(
             @PathVariable Long moduloId,
-            @RequestBody @Valid CriarAulaRequest request,
+            @RequestPart("dados") @Valid CriarAulaRequest request,
+            @RequestPart(value = "arquivo", required = false) MultipartFile arquivo,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var response = aulaService.adicionar(moduloId, request, userDetails.getUsername());
+        var response = aulaService.adicionar(moduloId, request, arquivo, userDetails.getUsername());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.created(response, "Aula adicionada com sucesso."));

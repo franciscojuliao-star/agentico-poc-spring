@@ -62,8 +62,8 @@ class AulaServiceTest {
             return a;
         });
 
-        var request = new CriarAulaRequest("Introdução ao Java");
-        var response = aulaService.adicionar(1L, request, "prof@email.com");
+        var request = new CriarAulaRequest("Introdução ao Java", null);
+        var response = aulaService.adicionar(1L, request, null, "prof@email.com");
 
         assertThat(response.nome()).isEqualTo("Introdução ao Java");
         assertThat(response.ordem()).isEqualTo(1);
@@ -75,8 +75,75 @@ class AulaServiceTest {
     void deveLancarExcecaoAoAdicionarAulaModuloInexistente() {
         when(moduloRepository.findByIdAndCursoProfessorEmail(any(), any())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> aulaService.adicionar(99L, new CriarAulaRequest("Aula"), "prof@email.com"))
+        assertThatThrownBy(() -> aulaService.adicionar(99L, new CriarAulaRequest("Aula", null), null, "prof@email.com"))
                 .isInstanceOf(ModuloNaoEncontradoException.class);
+    }
+
+    @Test
+    @DisplayName("Deve listar aulas de um módulo ordenadas (US-P20)")
+    void deveListarAulasDoModulo() {
+        var modulo = modulo();
+        when(moduloRepository.findByIdAndCursoProfessorEmail(1L, "prof@email.com"))
+                .thenReturn(Optional.of(modulo));
+        when(aulaRepository.findByModuloIdOrderByOrdem(1L))
+                .thenReturn(List.of(aula(1), aula(2)));
+
+        var resultado = aulaService.listar(1L, "prof@email.com");
+
+        assertThat(resultado).hasSize(2);
+        assertThat(resultado.get(0).ordem()).isEqualTo(1);
+        assertThat(resultado.get(1).ordem()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Deve lançar ModuloNaoEncontradoException ao listar aulas de módulo inexistente")
+    void deveLancarExcecaoAoListarAulasModuloInexistente() {
+        when(moduloRepository.findByIdAndCursoProfessorEmail(any(), any())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> aulaService.listar(99L, "prof@email.com"))
+                .isInstanceOf(ModuloNaoEncontradoException.class);
+    }
+
+    @Test
+    @DisplayName("Deve adicionar aula com arquivo PDF na criação (US-P21)")
+    void deveAdicionarAulaComArquivoPdf() {
+        var modulo = modulo();
+        when(moduloRepository.findByIdAndCursoProfessorEmail(1L, "prof@email.com"))
+                .thenReturn(Optional.of(modulo));
+        when(aulaRepository.countByModuloId(1L)).thenReturn(0);
+        when(aulaRepository.save(any())).thenAnswer(inv -> {
+            Aula a = inv.getArgument(0);
+            a.setId(1L);
+            return a;
+        });
+
+        var request = new CriarAulaRequest("Aula com PDF", null);
+        var arquivo = new MockMultipartFile("arquivo", "slides.pdf", "application/pdf", new byte[]{0x25, 0x50, 0x44, 0x46});
+
+        var response = aulaService.adicionar(1L, request, arquivo, "prof@email.com");
+
+        assertThat(response.arquivo()).isNotBlank();
+        assertThat(response.tipoArquivo()).isEqualTo(TipoArquivo.PDF);
+    }
+
+    @Test
+    @DisplayName("Deve adicionar aula com conteúdo CKEditor na criação (US-P22)")
+    void deveAdicionarAulaComConteudoCkEditor() {
+        var modulo = modulo();
+        when(moduloRepository.findByIdAndCursoProfessorEmail(1L, "prof@email.com"))
+                .thenReturn(Optional.of(modulo));
+        when(aulaRepository.countByModuloId(1L)).thenReturn(0);
+        when(aulaRepository.save(any())).thenAnswer(inv -> {
+            Aula a = inv.getArgument(0);
+            a.setId(1L);
+            return a;
+        });
+
+        var request = new CriarAulaRequest("Aula com texto", "<p>Conteúdo</p>");
+        var response = aulaService.adicionar(1L, request, null, "prof@email.com");
+
+        assertThat(response.conteudoCkEditor()).isEqualTo("<p>Conteúdo</p>");
+        assertThat(response.arquivo()).isNull();
     }
 
     @Test
