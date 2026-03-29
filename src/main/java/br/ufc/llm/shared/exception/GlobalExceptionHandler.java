@@ -5,6 +5,7 @@ import br.ufc.llm.perfil.exception.SenhaAtualInvalidaException;
 import br.ufc.llm.perfil.exception.TipoArquivoInvalidoException;
 import br.ufc.llm.auth.exception.CredenciaisInvalidasException;
 import br.ufc.llm.shared.dto.ApiResponse;
+import org.springframework.ai.retry.NonTransientAiException;
 import br.ufc.llm.curso.exception.CursoNaoEncontradoException;
 import br.ufc.llm.curso.exception.TransicaoStatusInvalidaException;
 import br.ufc.llm.aula.exception.AulaNaoEncontradaException;
@@ -106,6 +107,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_GATEWAY)
                 .body(ApiResponse.error(ex.getMessage(), 502));
+    }
+
+    @ExceptionHandler(NonTransientAiException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNonTransientAi(NonTransientAiException ex) {
+        String mensagem = ex.getMessage() != null && ex.getMessage().contains("429")
+                ? "Limite de requisições da IA atingido. Aguarde alguns instantes e tente novamente."
+                : "Erro ao comunicar com o serviço de IA: " + ex.getMessage();
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(ApiResponse.error(mensagem, 503));
     }
 
     @ExceptionHandler(ConteudoInsuficienteException.class)
