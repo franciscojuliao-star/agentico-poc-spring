@@ -134,7 +134,9 @@ public class AulaService {
 
     private TipoArquivo detectarTipo(String nomeOriginal) {
         if (nomeOriginal == null) return TipoArquivo.PDF;
-        String ext = nomeOriginal.substring(nomeOriginal.lastIndexOf('.')).toLowerCase();
+        int pontoIdx = nomeOriginal.lastIndexOf('.');
+        if (pontoIdx < 0) return TipoArquivo.PDF;
+        String ext = nomeOriginal.substring(pontoIdx).toLowerCase();
         if (EXTENSOES_VIDEO.contains(ext)) return TipoArquivo.VIDEO;
         return TipoArquivo.PDF;
     }
