@@ -41,11 +41,11 @@ spring:
 
   ai:
     openai:
-      api-key: ${GOOGLE_AI_API_KEY}
-      base-url: https://generativelanguage.googleapis.com/v1beta/openai
+      api-key: ${GROQ_API_KEY}
+      base-url: https://api.groq.com/openai
       chat:
         options:
-          model: gemini-2.0-flash
+          model: llama-3.3-70b-versatile
 
 server:
   port: 8080
