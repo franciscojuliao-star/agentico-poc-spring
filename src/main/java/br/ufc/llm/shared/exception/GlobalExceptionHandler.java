@@ -14,6 +14,7 @@ import br.ufc.llm.prova.exception.AlternativaNaoEncontradaException;
 import br.ufc.llm.prova.exception.PerguntaNaoEncontradaException;
 import br.ufc.llm.prova.exception.ProvaJaExisteException;
 import br.ufc.llm.prova.exception.ProvaNaoEncontradaException;
+import br.ufc.llm.prova.exception.RespostaIaMalformadaException;
 import br.ufc.llm.modulo.exception.ModuloNaoEncontradoException;
 import br.ufc.llm.usuario.exception.CpfJaCadastradoException;
 import br.ufc.llm.usuario.exception.EmailJaCadastradoException;
@@ -98,6 +99,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ex.getMessage(), 404));
+    }
+
+    @ExceptionHandler(RespostaIaMalformadaException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRespostaIaMalformada(RespostaIaMalformadaException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(ApiResponse.error(ex.getMessage(), 502));
     }
 
     @ExceptionHandler(ConteudoInsuficienteException.class)

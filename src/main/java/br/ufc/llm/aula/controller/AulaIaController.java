@@ -1,17 +1,16 @@
 package br.ufc.llm.aula.controller;
 
+import br.ufc.llm.aula.dto.ConfirmarConteudoRequest;
 import br.ufc.llm.aula.dto.ConteudoGeradoResponse;
 import br.ufc.llm.aula.service.AulaIaService;
 import br.ufc.llm.shared.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @SecurityRequirement(name = "bearerAuth")
 @RestController
@@ -32,8 +31,9 @@ public class AulaIaController {
     @PostMapping("/{id}/confirmar-conteudo")
     public ResponseEntity<ApiResponse<ConteudoGeradoResponse>> confirmarConteudo(
             @PathVariable Long id,
+            @RequestBody @Valid ConfirmarConteudoRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var response = aulaIaService.confirmarConteudo(id, userDetails.getUsername());
+        var response = aulaIaService.confirmarConteudo(id, userDetails.getUsername(), request.conteudo());
         return ResponseEntity.ok(ApiResponse.ok(response, "Conteúdo confirmado com sucesso."));
     }
 }

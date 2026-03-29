@@ -105,16 +105,31 @@ class AulaIaServiceTest {
     }
 
     @Test
-    @DisplayName("Deve confirmar conteúdo gerado (US-P27)")
+    @DisplayName("Deve confirmar conteúdo gerado sem edição (US-P27)")
     void deveConfirmarConteudoGerado() {
         var aula = aulaComConteudoGerado("<h1>Gerado</h1>");
         when(aulaRepository.findByIdAndModuloCursoProfessorEmail(1L, "prof@email.com"))
                 .thenReturn(Optional.of(aula));
         when(aulaRepository.save(any())).thenReturn(aula);
 
-        var response = aulaIaService.confirmarConteudo(1L, "prof@email.com");
+        var response = aulaIaService.confirmarConteudo(1L, "prof@email.com", "<h1>Gerado</h1>");
 
         assertThat(response.conteudoGerado()).isEqualTo("<h1>Gerado</h1>");
+        verify(aulaRepository).save(aula);
+    }
+
+    @Test
+    @DisplayName("Deve confirmar conteúdo editado pelo professor (US-P27)")
+    void deveConfirmarConteudoEditadoPeloProfessor() {
+        var aula = aulaComConteudoGerado("<h1>Gerado</h1>");
+        when(aulaRepository.findByIdAndModuloCursoProfessorEmail(1L, "prof@email.com"))
+                .thenReturn(Optional.of(aula));
+        when(aulaRepository.save(any())).thenReturn(aula);
+
+        var response = aulaIaService.confirmarConteudo(1L, "prof@email.com", "<h1>Editado pelo professor</h1>");
+
+        assertThat(aula.getConteudoGerado()).isEqualTo("<h1>Editado pelo professor</h1>");
+        assertThat(response.conteudoGerado()).isEqualTo("<h1>Editado pelo professor</h1>");
         verify(aulaRepository).save(aula);
     }
 
@@ -125,7 +140,7 @@ class AulaIaServiceTest {
         when(aulaRepository.findByIdAndModuloCursoProfessorEmail(1L, "prof@email.com"))
                 .thenReturn(Optional.of(aula));
 
-        assertThatThrownBy(() -> aulaIaService.confirmarConteudo(1L, "prof@email.com"))
+        assertThatThrownBy(() -> aulaIaService.confirmarConteudo(1L, "prof@email.com", "<h1>Conteúdo</h1>"))
                 .isInstanceOf(ConteudoGeradoAusenteException.class);
     }
 
@@ -134,7 +149,7 @@ class AulaIaServiceTest {
     void deveLancarExcecaoAulaInexistenteAoConfirmar() {
         when(aulaRepository.findByIdAndModuloCursoProfessorEmail(any(), any())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> aulaIaService.confirmarConteudo(99L, "prof@email.com"))
+        assertThatThrownBy(() -> aulaIaService.confirmarConteudo(99L, "prof@email.com", "<h1>Conteúdo</h1>"))
                 .isInstanceOf(AulaNaoEncontradaException.class);
     }
 
