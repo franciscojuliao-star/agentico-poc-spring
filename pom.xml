@@ -95,7 +95,7 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- ===== Spring AI + OpenAI ===== -->
+		<!-- ===== Spring AI + Groq (OpenAI-compatible) ===== -->
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-starter-model-openai</artifactId>
@@ -154,6 +154,13 @@
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
+		</dependency>
+
+		<!-- ===== Dotenv (.env → variáveis de ambiente locais) ===== -->
+		<dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>4.0.0</version>
 		</dependency>
 
 		<!-- ===== Testes ===== -->

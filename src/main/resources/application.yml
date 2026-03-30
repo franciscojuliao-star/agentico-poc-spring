@@ -3,9 +3,9 @@ spring:
     name: poc-llm-ufc
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/poc_llm_ufc}
+    username: ${DB_USERNAME:poc_user}
+    password: ${DB_PASSWORD:poc123}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -22,11 +22,16 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:seu-email@gmail.com}
+    password: ${MAIL_PASSWORD:sua-senha-de-app-gmail}
     properties:
       mail:
         smtp:
@@ -36,18 +41,19 @@ spring:
 
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY}
+      api-key: ${GROQ_API_KEY}
+      base-url: https://api.groq.com/openai
       chat:
         options:
-          model: gpt-4o
+          model: llama-3.3-70b-versatile
 
 server:
   port: 8080
 
 security:
   jwt:
-    secret: ${JWT_SECRET}
-    access-token-expiration: 900000       # 15 minutos em ms
+    secret: ${JWT_SECRET:chave-secreta-local-dev-minimo-32-caracteres}
+    access-token-expiration: 3600000      # 1 hora em ms
     refresh-token-expiration: 604800000   # 7 dias em ms
 
 upload:

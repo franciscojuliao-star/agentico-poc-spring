@@ -3,6 +3,8 @@ package br.ufc.llm.auth.controller;
 import br.ufc.llm.usuario.domain.PerfilUsuario;
 import br.ufc.llm.usuario.domain.StatusUsuario;
 import br.ufc.llm.usuario.dto.UsuarioResponse;
+import br.ufc.llm.auth.service.AuthService;
+import br.ufc.llm.shared.security.JwtAuthFilter;
 import br.ufc.llm.usuario.exception.CpfJaCadastradoException;
 import br.ufc.llm.usuario.exception.EmailJaCadastradoException;
 import br.ufc.llm.usuario.service.UsuarioService;
@@ -36,6 +38,12 @@ class CadastroControllerTest {
 
     @MockitoBean
     private UsuarioService usuarioService;
+
+    @MockitoBean
+    private AuthService authService;
+
+    @MockitoBean
+    private JwtAuthFilter jwtAuthFilter;
 
     private Map<String, String> bodyValido() {
         return Map.of(
