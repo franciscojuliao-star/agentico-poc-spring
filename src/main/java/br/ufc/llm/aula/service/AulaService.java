@@ -68,7 +68,7 @@ public class AulaService {
 
         if (arquivo != null && !arquivo.isEmpty()) {
             builder.arquivo(salvarArquivo(arquivo, emailProfessor))
-                   .tipoArquivo(detectarTipo(arquivo.getOriginalFilename()));
+                   .tipoArquivo(detectarTipo(arquivo));
         }
 
         return toResponse(aulaRepository.save(builder.build()));
@@ -79,7 +79,7 @@ public class AulaService {
                 .orElseThrow(() -> new AulaNaoEncontradaException(aulaId));
 
         String nome = salvarArquivo(arquivo, emailProfessor);
-        TipoArquivo tipo = detectarTipo(arquivo.getOriginalFilename());
+        TipoArquivo tipo = detectarTipo(arquivo);
 
         aula.setArquivo(nome);
         aula.setTipoArquivo(tipo);
@@ -132,19 +132,25 @@ public class AulaService {
         aulaRepository.saveAll(todas);
     }
 
-    private TipoArquivo detectarTipo(String nomeOriginal) {
-        if (nomeOriginal == null) return TipoArquivo.PDF;
-        int pontoIdx = nomeOriginal.lastIndexOf('.');
-        if (pontoIdx < 0) return TipoArquivo.PDF;
-        String ext = nomeOriginal.substring(pontoIdx).toLowerCase();
-        if (EXTENSOES_VIDEO.contains(ext)) return TipoArquivo.VIDEO;
+    private TipoArquivo detectarTipo(MultipartFile arquivo) {
+        String nome = arquivo.getOriginalFilename();
+        if (nome != null) {
+            int pontoIdx = nome.lastIndexOf('.');
+            if (pontoIdx >= 0) {
+                String ext = nome.substring(pontoIdx).toLowerCase();
+                if (EXTENSOES_VIDEO.contains(ext)) return TipoArquivo.VIDEO;
+                if (EXTENSOES_PDF.contains(ext)) return TipoArquivo.PDF;
+            }
+        }
+        String ct = arquivo.getContentType();
+        if (ct != null && ct.contains("video")) return TipoArquivo.VIDEO;
         return TipoArquivo.PDF;
     }
 
     private String salvarArquivo(MultipartFile arquivo, String email) {
         String nome = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
                 + "_" + extrairNomeUsuario(email)
-                + extrairExtensao(arquivo.getOriginalFilename());
+                + extrairExtensao(arquivo);
         try {
             Path destino = Path.of(uploadDir, nome);
             Files.createDirectories(destino.getParent());
@@ -160,9 +166,22 @@ public class AulaService {
         return arroba > 0 ? email.substring(0, arroba) : email;
     }
 
-    private String extrairExtensao(String nomeOriginal) {
-        if (nomeOriginal == null || !nomeOriginal.contains(".")) return ".bin";
-        return nomeOriginal.substring(nomeOriginal.lastIndexOf('.'));
+    private String extrairExtensao(MultipartFile arquivo) {
+        String nome = arquivo.getOriginalFilename();
+        if (nome != null && nome.contains(".")) {
+            return nome.substring(nome.lastIndexOf('.'));
+        }
+        String ct = arquivo.getContentType();
+        if (ct != null) {
+            if (ct.contains("pdf")) return ".pdf";
+            if (ct.contains("mp4") || ct.contains("video")) return ".mp4";
+        }
+        try {
+            byte[] header = new byte[4];
+            arquivo.getInputStream().read(header);
+            if (header[0] == '%' && header[1] == 'P' && header[2] == 'D' && header[3] == 'F') return ".pdf";
+        } catch (IOException ignored) {}
+        return ".pdf"; // padrão para uploads sem extensão identificável
     }
 
     private AulaResponse toResponse(Aula aula) {
