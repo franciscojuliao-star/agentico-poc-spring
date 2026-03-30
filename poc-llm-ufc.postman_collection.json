@@ -1,0 +1,626 @@
+{
+  "info": {
+    "name": "PoC LLM UFC",
+    "description": "Coleção completa da API do LMS PoC LLM UFC. Após fazer login, o token é salvo automaticamente nas variáveis.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Cadastro",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/cadastro",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Professor Teste\",\n  \"cpf\": \"111.111.111-11\",\n  \"email\": \"prof@teste.com\",\n  \"senha\": \"senha123\",\n  \"perfil\": \"PROFESSOR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data) {",
+                  "  pm.collectionVariables.set('token', json.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"prof@teste.com\",\n  \"senha\": \"senha123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data) {",
+                  "  pm.collectionVariables.set('token', json.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/refresh",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.data) {",
+                  "  pm.collectionVariables.set('token', json.data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@ufc.br\",\n  \"senha\": \"admin123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar Usuários",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/usuarios",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Ativar Usuário",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/admin/usuarios/3/ativar",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Desativar Usuário",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/admin/usuarios/3/desativar",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Perfil",
+      "item": [
+        {
+          "name": "Ver Perfil",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/perfil",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Alterar Senha",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/perfil/senha",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senhaAtual\": \"senha123\",\n  \"novaSenha\": \"novaSenha123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Atualizar Foto de Perfil",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/perfil/foto",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "foto", "type": "file", "src": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cursos",
+      "item": [
+        {
+          "name": "Listar Cursos",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/cursos",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Buscar Cursos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cursos/buscar?q=java",
+              "host": ["{{baseUrl}}"],
+              "path": ["cursos", "buscar"],
+              "query": [{ "key": "q", "value": "java" }]
+            },
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Criar Curso",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/cursos",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "dados",
+                  "value": "{\"titulo\":\"Curso de Java\",\"categoria\":\"Tecnologia\",\"descricao\":\"Aprenda Java do zero\",\"cargaHoraria\":\"40h\"}",
+                  "type": "text",
+                  "contentType": "application/json"
+                },
+                { "key": "capa", "type": "file", "src": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Editar Curso",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/cursos/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "dados",
+                  "value": "{\"titulo\":\"Curso de Java Atualizado\",\"categoria\":\"Tecnologia\",\"descricao\":\"Aprenda Java\",\"cargaHoraria\":\"40h\"}",
+                  "type": "text",
+                  "contentType": "application/json"
+                },
+                { "key": "capa", "type": "file", "src": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Alterar Status do Curso",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/cursos/1/status",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PUBLICADO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Configurar Dados de Matrícula",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/cursos/1/dados-matricula",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requerEndereco\": true,\n  \"requerGenero\": false,\n  \"requerIdade\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Deletar Curso",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/cursos/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Módulos",
+      "item": [
+        {
+          "name": "Listar Módulos do Curso",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/cursos/1/modulos",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Criar Módulo",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/cursos/1/modulos",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Atualizar Capa do Módulo",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/modulos/1/capa",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "capa", "type": "file", "src": "" }]
+            }
+          }
+        },
+        {
+          "name": "Reordenar Módulo",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/modulos/1/ordem",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"novaOrdem\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Deletar Módulo",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/modulos/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aulas",
+      "item": [
+        {
+          "name": "Listar Aulas do Módulo",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/modulos/1/aulas",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Criar Aula (texto)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/modulos/1/aulas",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "dados",
+                  "value": "{\"nome\":\"Introdução ao Java\",\"conteudoCkEditor\":\"<p>Java é uma linguagem orientada a objetos...</p>\"}",
+                  "type": "text",
+                  "contentType": "application/json"
+                },
+                { "key": "arquivo", "type": "file", "src": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Aula (com PDF)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/modulos/1/aulas",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "dados",
+                  "value": "{\"nome\":\"Aula com PDF\"}",
+                  "type": "text",
+                  "contentType": "application/json"
+                },
+                { "key": "arquivo", "type": "file", "src": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Editar Aula",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/aulas/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Introdução ao Java - Atualizado\",\n  \"conteudoCkEditor\": \"<p>Conteúdo atualizado...</p>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Atualizar Arquivo da Aula",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/aulas/1/arquivo",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "arquivo", "type": "file", "src": "" }]
+            }
+          }
+        },
+        {
+          "name": "Reordenar Aula",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/aulas/1/ordem",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"novaOrdem\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Deletar Aula",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/aulas/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IA — Geração de Conteúdo",
+      "item": [
+        {
+          "name": "Gerar Conteúdo da Aula",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/aulas/1/gerar-conteudo",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Confirmar e Salvar Conteúdo Gerado",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/aulas/1/confirmar-conteudo",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conteudo\": \"<h2>Introdução ao Java</h2><p>Cole aqui o HTML gerado ou editado pelo professor.</p>\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provas",
+      "item": [
+        {
+          "name": "Criar Prova do Módulo",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/modulos/1/prova",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Buscar Prova do Módulo",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/modulos/1/prova",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Configurar Prova",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/provas/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mostrarRespostasErradas\": true,\n  \"mostrarRespostasCorretas\": true,\n  \"mostrarValores\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Deletar Prova",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/provas/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "IA — Quiz",
+      "item": [
+        {
+          "name": "Gerar Quiz com IA",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/modulos/1/prova/gerar-quiz-ia",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        },
+        {
+          "name": "Salvar Quiz Gerado",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/modulos/1/prova/salvar-quiz",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"enunciado\": \"Qual o ano de criação do Java?\",\n    \"pontos\": 1,\n    \"alternativas\": [\n      { \"texto\": \"1990\", \"correta\": false },\n      { \"texto\": \"1995\", \"correta\": true },\n      { \"texto\": \"2000\", \"correta\": false },\n      { \"texto\": \"2005\", \"correta\": false }\n    ]\n  }\n]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Perguntas",
+      "item": [
+        {
+          "name": "Adicionar Pergunta à Prova",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/provas/1/perguntas",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enunciado\": \"O que é JVM?\",\n  \"pontos\": 2,\n  \"alternativas\": [\n    { \"texto\": \"Java Virtual Machine\", \"correta\": true },\n    { \"texto\": \"Java Variable Method\", \"correta\": false },\n    { \"texto\": \"Java Vendor Module\", \"correta\": false },\n    { \"texto\": \"Nenhuma das anteriores\", \"correta\": false }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Editar Pergunta",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/perguntas/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enunciado\": \"O que significa JVM?\",\n  \"pontos\": 2,\n  \"alternativas\": [\n    { \"texto\": \"Java Virtual Machine\", \"correta\": true },\n    { \"texto\": \"Java Variable Method\", \"correta\": false },\n    { \"texto\": \"Java Vendor Module\", \"correta\": false },\n    { \"texto\": \"Nenhuma das anteriores\", \"correta\": false }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Deletar Pergunta",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/perguntas/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alternativas",
+      "item": [
+        {
+          "name": "Adicionar Alternativa à Pergunta",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/perguntas/1/alternativas",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Nova alternativa\",\n  \"correta\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Editar Alternativa",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/alternativas/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Alternativa editada\",\n  \"correta\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Deletar Alternativa",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/alternativas/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }]
+          }
+        }
+      ]
+    }
+  ]
+}

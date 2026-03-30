@@ -13,6 +13,7 @@ import br.ufc.llm.prova.domain.Prova;
 import br.ufc.llm.prova.dto.PerguntaRequest;
 import br.ufc.llm.prova.dto.QuizGeradoResponse;
 import br.ufc.llm.prova.exception.ProvaNaoEncontradaException;
+import br.ufc.llm.prova.exception.RespostaIaMalformadaException;
 import br.ufc.llm.prova.repository.PerguntaRepository;
 import br.ufc.llm.prova.repository.ProvaRepository;
 import br.ufc.llm.usuario.domain.PerfilUsuario;
@@ -64,13 +65,10 @@ class QuizIaServiceTest {
     void deveGerarQuizSemSalvar() {
         var modulo = modulo();
         var aula = aulaComCkEditor(modulo, "<p>Conteúdo Java</p>");
-        var prova = prova(modulo);
 
         when(moduloRepository.findByIdAndCursoProfessorEmail(1L, "prof@email.com"))
                 .thenReturn(Optional.of(modulo));
         when(aulaRepository.findByModuloIdOrderByOrdem(1L)).thenReturn(List.of(aula));
-        when(provaRepository.findByModuloIdAndModuloCursoProfessorEmail(1L, "prof@email.com"))
-                .thenReturn(Optional.of(prova));
 
         mockChatClientJson("""
                 [{"enunciado":"O que é Java?","pontos":1,"alternativas":[{"texto":"Linguagem de programação","correta":true},{"texto":"Framework","correta":false}]}]
@@ -81,6 +79,43 @@ class QuizIaServiceTest {
         assertThat(response.perguntas()).hasSize(1);
         assertThat(response.perguntas().get(0).enunciado()).isEqualTo("O que é Java?");
         assertThat(response.perguntas().get(0).alternativas()).hasSize(2);
+        verifyNoInteractions(provaRepository);
+    }
+
+    @Test
+    @DisplayName("Deve gerar quiz mesmo sem prova criada previamente (US-P35)")
+    void deveGerarQuizSemProvaCriada() {
+        var modulo = modulo();
+        var aula = aulaComCkEditor(modulo, "<p>Conteúdo</p>");
+
+        when(moduloRepository.findByIdAndCursoProfessorEmail(1L, "prof@email.com"))
+                .thenReturn(Optional.of(modulo));
+        when(aulaRepository.findByModuloIdOrderByOrdem(1L)).thenReturn(List.of(aula));
+
+        mockChatClientJson("""
+                [{"enunciado":"Pergunta?","pontos":1,"alternativas":[{"texto":"A","correta":true},{"texto":"B","correta":false}]}]
+                """);
+
+        var response = quizIaService.gerarQuiz(1L, "prof@email.com");
+
+        assertThat(response.perguntas()).hasSize(1);
+        verifyNoInteractions(provaRepository);
+    }
+
+    @Test
+    @DisplayName("Deve lançar RespostaIaMalformadaException quando IA retorna JSON inválido (US-P35)")
+    void deveLancarExcecaoQuandoIaRetornaJsonInvalido() {
+        var modulo = modulo();
+        var aula = aulaComCkEditor(modulo, "<p>Conteúdo</p>");
+
+        when(moduloRepository.findByIdAndCursoProfessorEmail(1L, "prof@email.com"))
+                .thenReturn(Optional.of(modulo));
+        when(aulaRepository.findByModuloIdOrderByOrdem(1L)).thenReturn(List.of(aula));
+
+        mockChatClientJson("isso não é JSON válido");
+
+        assertThatThrownBy(() -> quizIaService.gerarQuiz(1L, "prof@email.com"))
+                .isInstanceOf(RespostaIaMalformadaException.class);
     }
 
     @Test
@@ -101,8 +136,6 @@ class QuizIaServiceTest {
         when(moduloRepository.findByIdAndCursoProfessorEmail(1L, "prof@email.com"))
                 .thenReturn(Optional.of(modulo));
         when(aulaRepository.findByModuloIdOrderByOrdem(1L)).thenReturn(List.of(aulaSemConteudo));
-        when(provaRepository.findByModuloIdAndModuloCursoProfessorEmail(1L, "prof@email.com"))
-                .thenReturn(Optional.of(prova(modulo)));
 
         assertThatThrownBy(() -> quizIaService.gerarQuiz(1L, "prof@email.com"))
                 .isInstanceOf(ConteudoInsuficienteException.class);

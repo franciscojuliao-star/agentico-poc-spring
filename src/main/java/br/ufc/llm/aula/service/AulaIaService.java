@@ -60,7 +60,7 @@ public class AulaIaService {
         return new ConteudoGeradoResponse(aula.getId(), conteudoGerado);
     }
 
-    public ConteudoGeradoResponse confirmarConteudo(Long aulaId, String emailProfessor) {
+    public ConteudoGeradoResponse confirmarConteudo(Long aulaId, String emailProfessor, String conteudo) {
         var aula = aulaRepository.findByIdAndModuloCursoProfessorEmail(aulaId, emailProfessor)
                 .orElseThrow(() -> new AulaNaoEncontradaException(aulaId));
 
@@ -68,6 +68,7 @@ public class AulaIaService {
             throw new ConteudoGeradoAusenteException();
         }
 
+        aula.setConteudoGerado(conteudo);
         aulaRepository.save(aula);
         return new ConteudoGeradoResponse(aula.getId(), aula.getConteudoGerado());
     }

@@ -14,6 +14,7 @@ import br.ufc.llm.prova.dto.PerguntaRequest;
 import br.ufc.llm.prova.dto.PerguntaResponse;
 import br.ufc.llm.prova.dto.QuizGeradoResponse;
 import br.ufc.llm.prova.exception.ProvaNaoEncontradaException;
+import br.ufc.llm.prova.exception.RespostaIaMalformadaException;
 import br.ufc.llm.prova.repository.PerguntaRepository;
 import br.ufc.llm.prova.repository.ProvaRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -76,9 +77,6 @@ public class QuizIaService {
     public QuizGeradoResponse gerarQuiz(Long moduloId, String emailProfessor) {
         moduloRepository.findByIdAndCursoProfessorEmail(moduloId, emailProfessor)
                 .orElseThrow(() -> new ModuloNaoEncontradoException(moduloId));
-
-        provaRepository.findByModuloIdAndModuloCursoProfessorEmail(moduloId, emailProfessor)
-                .orElseThrow(() -> new ProvaNaoEncontradaException(moduloId));
 
         String conteudo = coletarConteudoModulo(moduloId);
 
@@ -163,8 +161,8 @@ public class QuizIaService {
                 return new PerguntaResponse(null, enunciado, pontos, 0, alternativas);
             }).toList();
         } catch (Exception e) {
-            log.error("Falha ao parsear JSON do quiz gerado pela IA", e);
-            return List.of();
+            log.error("Falha ao parsear JSON do quiz gerado pela IA. Resposta recebida: {}", json, e);
+            throw new RespostaIaMalformadaException();
         }
     }
 

@@ -20,6 +20,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.http.MediaType;
+
 @WebMvcTest(AulaIaController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class AulaIaControllerTest {
@@ -67,22 +69,36 @@ class AulaIaControllerTest {
     @DisplayName("Deve retornar 200 ao confirmar conteúdo gerado (US-P27)")
     @WithMockUser(username = "prof@email.com")
     void deveRetornar200AoConfirmarConteudo() throws Exception {
-        when(aulaIaService.confirmarConteudo(any(), any())).thenReturn(
+        when(aulaIaService.confirmarConteudo(any(), any(), any())).thenReturn(
                 new ConteudoGeradoResponse(1L, "<h1>Confirmado</h1>"));
 
-        mockMvc.perform(post("/aulas/1/confirmar-conteudo"))
+        mockMvc.perform(post("/aulas/1/confirmar-conteudo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"conteudo\":\"<h1>Confirmado</h1>\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.data.conteudoGerado").value("<h1>Confirmado</h1>"));
     }
 
     @Test
+    @DisplayName("Deve retornar 400 ao confirmar sem enviar conteúdo no body")
+    @WithMockUser(username = "prof@email.com")
+    void deveRetornar400AoConfirmarSemBody() throws Exception {
+        mockMvc.perform(post("/aulas/1/confirmar-conteudo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"conteudo\":\"\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("Deve retornar 422 ao confirmar sem conteúdo gerado prévio")
     @WithMockUser(username = "prof@email.com")
     void deveRetornar422AoConfirmarSemConteudoGerado() throws Exception {
-        doThrow(new ConteudoGeradoAusenteException()).when(aulaIaService).confirmarConteudo(any(), any());
+        doThrow(new ConteudoGeradoAusenteException()).when(aulaIaService).confirmarConteudo(any(), any(), any());
 
-        mockMvc.perform(post("/aulas/1/confirmar-conteudo"))
+        mockMvc.perform(post("/aulas/1/confirmar-conteudo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"conteudo\":\"<h1>Conteúdo</h1>\"}"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.status").value(422));
     }
@@ -91,9 +107,11 @@ class AulaIaControllerTest {
     @DisplayName("Deve retornar 404 ao confirmar conteúdo de aula inexistente")
     @WithMockUser(username = "prof@email.com")
     void deveRetornar404AoConfirmarConteudoAulaInexistente() throws Exception {
-        doThrow(new AulaNaoEncontradaException(99L)).when(aulaIaService).confirmarConteudo(any(), any());
+        doThrow(new AulaNaoEncontradaException(99L)).when(aulaIaService).confirmarConteudo(any(), any(), any());
 
-        mockMvc.perform(post("/aulas/99/confirmar-conteudo"))
+        mockMvc.perform(post("/aulas/99/confirmar-conteudo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"conteudo\":\"<h1>Conteúdo</h1>\"}"))
                 .andExpect(status().isNotFound());
     }
 }
